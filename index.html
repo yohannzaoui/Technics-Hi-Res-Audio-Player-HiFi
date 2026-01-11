@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Technics SL-PS 740 Full Replica</title>
+    <title>Technics SL-PS 740 - Universal Edition</title>
     <style>
         :root {
             --bg-color: #0d0d0d;
@@ -27,10 +27,10 @@
 
         .player-container {
             background: var(--panel-color);
-            padding: 30px;
-            border-radius: 8px;
+            padding: 25px;
+            border-radius: 12px;
             width: 90%;
-            max-width: 650px;
+            max-width: 600px;
             border: 1px solid #333;
             box-shadow: 0 40px 100px rgba(0,0,0,0.8);
         }
@@ -66,7 +66,6 @@
             height: 80px;
             background: #000;
             margin-bottom: 20px;
-            border-bottom: 1px solid #222;
         }
 
         .controls-grid {
@@ -79,15 +78,12 @@
             background: #252525;
             border: 1px solid #444;
             color: #fff;
-            padding: 12px 5px;
+            padding: 15px 5px;
             font-size: 0.7rem;
             font-weight: bold;
             cursor: pointer;
-            transition: 0.2s;
             -webkit-appearance: none;
         }
-
-        button:hover { border-color: var(--accent-color); color: var(--accent-color); }
 
         .shuttle-zone {
             margin-top: 20px;
@@ -103,15 +99,20 @@
             accent-color: var(--accent-color);
         }
 
+        /* Essential iPad fix: A large, tappable zone */
         .file-zone {
             margin-top: 20px;
-            padding: 15px;
-            border: 1px dashed #444;
+            padding: 20px;
+            border: 2px dashed #444;
             text-align: center;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             color: var(--accent-color);
+            background: #111;
+            border-radius: 8px;
         }
+
+        #file-selector { display: none; }
     </style>
 </head>
 <body>
@@ -123,7 +124,7 @@
     </div>
 
     <div class="display-panel">
-        <div id="track-status" style="color: var(--display-color); font-size: 0.8rem; margin-bottom: 5px;">NO DISC</div>
+        <div id="track-status" style="color: var(--display-color); font-size: 0.8rem; margin-bottom: 5px;">DISC READY</div>
         <div id="timer" class="time-display">00:00</div>
     </div>
 
@@ -133,23 +134,21 @@
         <button onclick="handlePlay()">PLAY</button>
         <button onclick="handlePause()">PAUSE</button>
         <button onclick="handleStop()">STOP</button>
-        <button onclick="toggleTimeMode()">TIME MODE</button>
-        
+        <button onclick="toggleTimeMode()">TIME</button>
         <button onclick="runAutoCue()">AUTO CUE</button>
-        <button onclick="runPeakSearch()">PEAK SEARCH</button>
-        <button onclick="skip(-10)">-10 SEC</button>
-        <button onclick="skip(10)">+10 SEC</button>
+        <button onclick="runPeakSearch()">PEAK</button>
+        <button onclick="skip(-10)">-10s</button>
+        <button onclick="skip(10)">+10s</button>
     </div>
 
     <div class="shuttle-zone">
-        <span style="font-size: 0.6rem; color: #444;">JOG SHUTTLE</span>
         <input type="range" id="shuttle" min="-10" max="10" value="0" oninput="doShuttle(this.value)" onchange="this.value=0">
     </div>
 
-    <div class="file-zone" onclick="document.getElementById('file-selector').click()">
-        CLICK TO LOAD AUDIO (iPAD COMPATIBLE)
+    <div class="file-zone" id="drop-zone">
+        TAP HERE TO LOAD MUSIC
     </div>
-    <input type="file" id="file-selector" accept="audio/*" style="display:none">
+    <input type="file" id="file-selector" accept="audio/*, .mp3, .wav, .m4a, .aac">
 </div>
 
 <audio id="audio-engine" crossorigin="anonymous" playsinline></audio>
@@ -158,15 +157,28 @@
     const audio = document.getElementById('audio-engine');
     const timer = document.getElementById('timer');
     const status = document.getElementById('track-status');
+    const fileSelector = document.getElementById('file-selector');
+    const dropZone = document.getElementById('drop-zone');
     const canvas = document.getElementById('visualizer');
     const ctx = canvas.getContext('2d');
 
     let audioCtx, analyser, dataArray, source, timeMode = 'elapsed';
 
-    // --- Preferences & Initialization ---
-    function savePrefs() {
-        localStorage.setItem('technics_prefs', JSON.stringify({ lang: 'en', theme: 'dark', timeMode }));
-    }
+    // Persist preferences
+    const savePrefs = () => localStorage.setItem('technics_prefs', JSON.stringify({timeMode}));
+    
+    // iPad Fix: Trigger file input via explicit user tap on the zone
+    dropZone.addEventListener('click', () => fileSelector.click());
+
+    fileSelector.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            audio.src = URL.createObjectURL(file);
+            status.innerText = file.name.substring(0, 20).toUpperCase();
+            audio.load(); // Essential for Safari
+            savePrefs();
+        }
+    };
 
     function initAudio() {
         if (!audioCtx) {
@@ -183,26 +195,11 @@
         if (audioCtx.state === 'suspended') audioCtx.resume();
     }
 
-    // --- File Handling ---
-    document.getElementById('file-selector').onchange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            audio.src = URL.createObjectURL(file);
-            status.innerText = "TRACK READY";
-            audio.load();
-            savePrefs();
-        }
-    };
-
-    // --- Core Transport ---
     function handlePlay() { if(audio.src){ initAudio(); audio.play(); status.innerText = "PLAYING"; }}
     function handlePause() { audio.pause(); status.innerText = "PAUSED"; }
     function handleStop() { audio.pause(); audio.currentTime = 0; status.innerText = "STOPPED"; }
     function skip(v) { audio.currentTime += v; }
-    function toggleTimeMode() { 
-        timeMode = (timeMode === 'elapsed') ? 'remaining' : 'elapsed'; 
-        savePrefs();
-    }
+    function toggleTimeMode() { timeMode = (timeMode === 'elapsed' ? 'remaining' : 'elapsed'); savePrefs(); }
 
     audio.ontimeupdate = () => {
         let t = (timeMode === 'remaining' && audio.duration) ? (audio.duration - audio.currentTime) : audio.currentTime;
@@ -212,12 +209,8 @@
         timer.innerText = `${m}:${s}`;
     };
 
-    // --- Technics Specific Functions ---
-    function runAutoCue() {
-        audio.currentTime = 0;
-        audio.pause();
-        status.innerText = "AUTO CUE READY";
-    }
+    // Technics Special Functions
+    function runAutoCue() { audio.currentTime = 0; audio.pause(); status.innerText = "AUTO CUE"; }
 
     async function runPeakSearch() {
         if (!audio.src) return;
@@ -233,7 +226,7 @@
         }
         audio.currentTime = idx / decoded.sampleRate;
         audio.play();
-        status.innerText = "PEAK FOUND";
+        status.innerText = "PEAK LEVEL FOUND";
         setTimeout(() => audio.pause(), 3000);
     }
 
