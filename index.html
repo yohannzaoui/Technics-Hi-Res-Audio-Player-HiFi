@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Technics SL-PS 740 - Pro VFD Final</title>
+    <title>Technics SL-PS 740</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #080808;
@@ -50,21 +51,22 @@
 
         .status-line {
             color: var(--vfd-green);
-            font-family: 'Courier New', monospace;
-            font-size: 0.7rem;
+            font-family: 'Orbitron', sans-serif; /* Police LCD */
+            font-size: 0.65rem;
             letter-spacing: 2px;
             height: 1rem;
             text-transform: uppercase;
-            font-weight: bold;
         }
 
         .time-display {
             color: var(--vfd-green);
-            font-family: 'Courier New', monospace;
-            font-size: 3.5rem;
-            font-weight: bold;
+            font-family: 'Orbitron', sans-serif; /* Police LCD */
+            font-size: 3.2rem;
+            font-weight: 700;
             line-height: 1;
-            text-shadow: 0 0 12px rgba(36, 255, 138, 0.3);
+            /* Effet de lueur typique du VFD Technics */
+            text-shadow: 0 0 15px rgba(36, 255, 138, 0.5), 0 0 2px rgba(36, 255, 138, 0.8);
+            letter-spacing: -2px;
         }
 
         .track-name-display {
@@ -243,11 +245,7 @@
         timer.innerText = `${m}:${s}`;
     };
 
-    function runAutoCue() { 
-        audio.currentTime = 0; 
-        audio.pause(); 
-        statusFunc.innerText = "AUTO CUE"; 
-    }
+    function runAutoCue() { audio.currentTime = 0; audio.pause(); statusFunc.innerText = "AUTO CUE"; }
 
     function doShuttle(v) { 
         if(v != 0) {
@@ -289,18 +287,13 @@
         requestAnimationFrame(drawVU);
         if(!analyser) return;
         analyser.getByteFrequencyData(dataArray);
-
         let sum = 0;
         for(let i = 0; i < 20; i++) sum += dataArray[i];
         let currentVol = sum / 20;
 
-        if (currentVol < lastVolume) {
-            lastVolume -= 0.5; 
-        } else {
-            lastVolume = currentVol;
-        }
-        if (lastVolume < 0) lastVolume = 0;
-
+        if (currentVol < lastVolume) { lastVolume -= 0.5; } 
+        else { lastVolume = currentVol; }
+        
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         const segments = 22;
         const gap = 3;
@@ -315,9 +308,7 @@
                     if (i > 18) ctx.fillStyle = "#ff3333";
                     else if (i > 15) ctx.fillStyle = "#ff9d00";
                     else ctx.fillStyle = "#24ff8a";
-                } else {
-                    ctx.fillStyle = "#111";
-                }
+                } else { ctx.fillStyle = "#111"; }
                 ctx.fillRect(i * (segW + gap), y, segW, 12);
             }
         }
