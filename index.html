@@ -1,1 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technics SL-PS 740 Digital Replica</title>
+    <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --panel-color: #161616;
+            --accent-color: #d4af37; /* Technics Gold */
+            --display-color: #32ff7e; /* VFD Green */
+            --text-color: #c0c0c0;
+            --button-bg: #222;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .player-container {
+            background: var(--panel-color);
+            padding: 40px;
+            border-radius: 4px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            width: 650px;
+            border-top: 1px solid #333;
+            border-left: 1px solid #333;
+        }
+
+        .brand {
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            color: #888;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .display-panel {
+            background: #000;
+            padding: 20px;
+            border: 2px solid #222;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: inset 0 0 15px rgba(50, 255, 126, 0.1);
+        }
+
+        .track-info { 
+            color: var(--display-color);
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            margin-bottom: 5px;
+            text-shadow: 0 0 5px rgba(50, 255, 126, 0.5);
+        }
+
+        .time-display { 
+            color: var(--display-color);
+            font-family: 'Courier New', monospace;
+            font-size: 3rem; 
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(50, 255, 126, 0.8);
+        }
+
+        #audio-visualizer {
+            width: 100%;
+            height: 80px;
+            background: #000;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #222;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        button {
+            background: var(--button-bg);
+            border: 1px solid #333;
+            color: #eee;
+            padding: 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #333;
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        button:active { transform: translateY(1px); }
+
+        .shuttle-section {
+            margin-top: 25px;
+            padding: 15px;
+            background: #0d0d0d;
+            border: 1px solid #222;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .shuttle-label { font-size: 0.7rem; color: #666; width: 100px; }
+
+        input[type="range"] {
+            flex-grow: 1;
+            cursor: pointer;
+            accent-color: var(--accent-color);
+        }
+
+        #file-input {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+
+<div class="player-container">
+    <div class="brand">
+        <span>Technics</span>
+        <span>SL-PS 740 - MASH 1-BIT DAC</span>
+    </div>
+    
+    <div class="display-panel">
+        <div class="track-info" id="track-status">NO DISC LOADED</div>
+        <div class="time-display" id="timer">00:00</div>
+    </div>
+
+    <canvas id="audio-visualizer" width="600" height="80"></canvas>
+
+    <div class="controls">
+        <button onclick="playAudio()">Play</button>
+        <button onclick="pauseAudio()">Pause</button>
+        <button onclick="stopAudio()">Stop</button>
+        <button onclick="toggleTimeMode()">Time Mode</button>
+        
+        <button onclick="autoCue()">Auto Cue</button>
+        <button onclick="peakSearch()">Peak Search</button>
+        <button onclick="prevTrack()">|<<</button>
+        <button onclick="nextTrack()">>>|</button>
+    </div>
+
+    <div class="shuttle-section">
+        <span class="shuttle-label">JOG SHUTTLE</span>
+        <input type="range" id="shuttle" min="-10" max="10" value="0" step="1" oninput="handleShuttle(this.value)" onchange="resetShuttle()">
+    </div>
+
+    <input type="file" id="file-input" accept="audio/*">
+</div>
+
+<audio id="main-audio"></audio>
+
+<script>
+    const audio = document.getElementById('main-audio');
+    const timerDisplay = document.getElementById('timer');
+    const trackStatus = document.getElementById('track-status');
+    const shuttleSlider = document.getElementById('shuttle');
+    const visualizerCanvas = document.getElementById('audio-visualizer');
+    const canvasCtx = visualizerCanvas.getContext('2d');
+
+    let timeMode = 'elapsed'; 
+    let audioContext, analyser, dataArray, sourceNode;
+
+    // --- Preferences & Persistence ---
+    const saveSettings = () => {
+        const settings = { theme: 'dark', lang: 'en', timeMode: timeMode };
+        localStorage.setItem('slps740_config', JSON.stringify(settings));
+    };
+
+    const loadSettings = () => {
+        const config = JSON.parse(localStorage.getItem('slps740_config'));
+        if (config) {
+            timeMode = config.timeMode || 'elapsed';
+            console.log("Settings restored from storage.");
+        }
+    };
+
+    // --- Audio File Handling ---
+    document.getElementById('file-input').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const url = URL.createObjectURL(file);
+            audio.src = url;
+            trackStatus.innerText = "TRACK 01 - STANDBY";
+            saveSettings();
+            initVisualizer();
+        }
+    });
+
+    // --- Basic Transport Functions ---
+    function playAudio() { 
+        if (!audio.src) return;
+        audio.play(); 
+        trackStatus.innerText = "PLAYING"; 
+    }
+    
+    function pauseAudio() { 
+        audio.pause(); 
+        trackStatus.innerText = "PAUSED"; 
+    }
+
+    function stopAudio() { 
+        audio.pause(); 
+        audio.currentTime = 0; 
+        trackStatus.innerText = "STOPPED"; 
+    }
+
+    function toggleTimeMode() {
+        timeMode = (timeMode === 'elapsed') ? 'remaining' : 'elapsed';
+        saveSettings();
+    }
+
+    audio.ontimeupdate = () => {
+        let displayTime = audio.currentTime;
+        if (timeMode === 'remaining' && audio.duration) {
+            displayTime = audio.duration - audio.currentTime;
+        }
+        
+        const mins = Math.floor(displayTime / 60);
+        const secs = Math.floor(displayTime % 60);
+        timerDisplay.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    // --- Advanced Technics Features ---
+    function autoCue() {
+        audio.currentTime = 0;
+        audio.pause();
+        trackStatus.innerText = "AUTO CUE READY";
+    }
+
+    async function peakSearch() {
+        if (!audio.src) return;
+        trackStatus.innerText = "SCANNING PEAK...";
+        
+        if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        const response = await fetch(audio.src);
+        const arrayBuffer = await response.arrayBuffer();
+        const decodedBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        
+        const data = decodedBuffer.getChannelData(0);
+        let maxVal = 0;
+        let maxIndex = 0;
+
+        for (let i = 0; i < data.length; i++) {
+            if (Math.abs(data[i]) > maxVal) {
+                maxVal = Math.abs(data[i]);
+                maxIndex = i;
+            }
+        }
+
+        const peakTime = maxIndex / decodedBuffer.sampleRate;
+        audio.currentTime = peakTime;
+        trackStatus.innerText = "PEAK LEVEL FOUND";
+        audio.play();
+        setTimeout(() => audio.pause(), 2000);
+    }
+
+    function handleShuttle(val) {
+        if (val != 0) {
+            const speed = Math.sign(val) * Math.pow(Math.abs(val), 1.4) * 0.15;
+            audio.currentTime += speed;
+        }
+    }
+
+    function resetShuttle() { shuttleSlider.value = 0; }
+
+    // --- VFD Visualizer Logic ---
+    function initVisualizer() {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            sourceNode = audioContext.createMediaElementSource(audio);
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 128; 
+            sourceNode.connect(analyser);
+            analyser.connect(audioContext.destination);
+            
+            dataArray = new Uint8Array(analyser.frequencyBinCount);
+            draw();
+        }
+    }
+
+    function draw() {
+        requestAnimationFrame(draw);
+        if (!analyser) return;
+
+        analyser.getByteFrequencyData(dataArray);
+        canvasCtx.fillStyle = "black";
+        canvasCtx.fillRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+
+        const barWidth = (visualizerCanvas.width / dataArray.length) * 2;
+        let x = 0;
+
+        for (let i = 0; i < dataArray.length; i++) {
+            const barHeight = (dataArray[i] / 255) * visualizerCanvas.height;
+            
+            // Draw VFD segments
+            canvasCtx.fillStyle = `rgba(50, 255, 126, ${i / dataArray.length + 0.5})`;
+            canvasCtx.fillRect(x, visualizerCanvas.height - barHeight, barWidth - 2, barHeight);
+            
+            // Top Glow
+            canvasCtx.fillStyle = "#fff";
+            canvasCtx.fillRect(x, visualizerCanvas.height - barHeight - 2, barWidth - 2, 2);
+
+            x += barWidth;
+        }
+    }
+
+    window.onload = loadSettings;
+</script>
+</body>
+</html>
 
