@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Technics SL-PS 740 - Brand Identity</title>
+    <title>Technics SL-PS 740 - Clean Layout</title>
     <link href="https://fonts.cdnfonts.com/css/ds-digital" rel="stylesheet">
     <style>
         :root {
@@ -16,29 +16,10 @@
             --text-color: #b0b0b0;
         }
 
-        /* Style spécifique pour le logo Technics */
-        .brand-logo {
-            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            font-weight: 900;
-            font-style: italic;
-            letter-spacing: -1.5px;
-            font-size: 1.1rem;
-            color: #d1d1d1;
-            display: inline-block;
-            transform: scaleY(0.9); /* Légère compression verticale typique */
-        }
-
-        .model-number {
-            font-family: Arial, sans-serif;
-            font-size: 0.6rem;
-            color: #555;
-            letter-spacing: 1px;
-        }
-
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: -apple-system, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -55,6 +36,17 @@
             max-width: 600px;
             border: 1px solid #222;
             box-shadow: 0 40px 100px rgba(0,0,0,0.9);
+        }
+
+        /* En-tête avec police d'origine */
+        .header-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 10px;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            color: #888;
         }
 
         .display-panel {
@@ -233,9 +225,9 @@
 <body>
 
 <div class="player-container">
-    <div style="display:flex; justify-content:space-between; align-items: baseline; margin-bottom:10px;">
-        <span class="brand-logo">Technics</span>
-        <span class="model-number">SL-PS 740 / MASH 1-BIT DAC</span>
+    <div class="header-line">
+        <span>Technics</span>
+        <span>SL-PS 740 / MASH 1-BIT DAC</span>
     </div>
 
     <div class="display-panel">
