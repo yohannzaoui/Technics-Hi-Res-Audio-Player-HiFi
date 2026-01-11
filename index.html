@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Technics SL-PS 740 - High-Res Edition</title>
+    <title>Technics SL-PS 740 - Final Edition</title>
     <style>
         :root {
             --bg-color: #0d0d0d;
@@ -28,7 +28,7 @@
         .player-container {
             background: var(--panel-color);
             padding: 25px;
-            border-radius: 12px;
+            border-radius: 4px;
             width: 90%;
             max-width: 600px;
             border: 1px solid #333;
@@ -85,33 +85,51 @@
             -webkit-appearance: none;
         }
 
-        button:hover { border-color: var(--accent-color); color: var(--accent-color); }
-
         .shuttle-zone {
             margin-top: 20px;
             background: #050505;
             padding: 15px;
             display: flex;
-            align-items: center;
-            gap: 15px;
+            flex-direction: column;
+            gap: 10px;
         }
 
+        .shuttle-label {
+            font-size: 0.65rem;
+            color: #888;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        /* Removed yellow accent and styled for neutral dark look */
         input[type="range"] {
-            flex-grow: 1;
-            accent-color: var(--accent-color);
+            -webkit-appearance: none;
+            width: 100%;
+            background: #333;
+            height: 4px;
+            border-radius: 2px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #666;
+            border: 1px solid #999;
+            border-radius: 2px;
+            cursor: pointer;
         }
 
         .file-zone {
             margin-top: 20px;
             padding: 20px;
-            border: 2px dashed #444;
+            border: 1px solid #333;
             text-align: center;
             cursor: pointer;
-            font-size: 0.9rem;
-            color: var(--accent-color);
+            font-size: 0.8rem;
+            color: #888;
             background: #111;
-            border-radius: 8px;
-            text-transform: uppercase;
         }
 
         #file-selector { display: none; }
@@ -122,7 +140,7 @@
 <div class="player-container">
     <div class="brand-header">
         <span>Technics</span>
-        <span>SL-PS 740 / MULTI-FORMAT</span>
+        <span>SL-PS 740 / MASH 1-BIT</span>
     </div>
 
     <div class="display-panel">
@@ -144,14 +162,14 @@
     </div>
 
     <div class="shuttle-zone">
+        <div class="shuttle-label">JOG SHUTTLE</div>
         <input type="range" id="shuttle" min="-10" max="10" value="0" oninput="doShuttle(this.value)" onchange="this.value=0">
     </div>
 
     <div class="file-zone" onclick="document.getElementById('file-selector').click()">
-        LOAD AUDIO (MP3, MP4, AAC, FLAC, WAV)
+        LOAD AUDIO (MP3, MP4, AAC, FLAC, ALAC, WAV)
     </div>
-    <input type="file" id="file-selector" 
-           accept="audio/*, .mp3, .m4a, .mp4, .aac, .wav, .flac, .alac, audio/x-flac, audio/flac, audio/mp4">
+    <input type="file" id="file-selector" accept="audio/*, .mp3, .m4a, .mp4, .aac, .wav, .flac, .alac">
 </div>
 
 <audio id="audio-engine" crossorigin="anonymous" playsinline></audio>
@@ -165,17 +183,14 @@
 
     let audioCtx, analyser, dataArray, source, timeMode = 'elapsed';
 
-    // Auto-save preferences
     const savePrefs = () => localStorage.setItem('technics_prefs', JSON.stringify({timeMode}));
 
-    // Multi-format selector
     document.getElementById('file-selector').onchange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            const url = URL.createObjectURL(file);
-            audio.src = url;
+            audio.src = URL.createObjectURL(file);
             status.innerText = file.name.toUpperCase();
-            audio.load(); // Forces iPad Safari to buffer the new format
+            audio.load();
             savePrefs();
         }
     };
@@ -209,13 +224,12 @@
         timer.innerText = `${m}:${s}`;
     };
 
-    // Original Technics Functions
     function runAutoCue() { audio.currentTime = 0; audio.pause(); status.innerText = "AUTO CUE"; }
 
     async function runPeakSearch() {
         if (!audio.src) return;
         initAudio();
-        status.innerText = "SCANNING...";
+        status.innerText = "SCANNING PEAK...";
         const resp = await fetch(audio.src);
         const buf = await resp.arrayBuffer();
         const decoded = await audioCtx.decodeAudioData(buf);
@@ -226,7 +240,7 @@
         }
         audio.currentTime = idx / decoded.sampleRate;
         audio.play();
-        status.innerText = "PEAK LEVEL";
+        status.innerText = "PEAK FOUND";
         setTimeout(() => audio.pause(), 3000);
     }
 
