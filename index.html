@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Technics SL-PS 740 - Track Matrix</title>
+    <title>Technics SL-PS 740 - VU Fixed</title>
     <link href="https://fonts.cdnfonts.com/css/ds-digital" rel="stylesheet">
     <style>
         :root {
             --bg-color: #080808;
             --panel-color: #141414;
             --vfd-green: #24ff8a;
-            --vfd-green-dim: rgba(36, 255, 138, 0.2);
             --vfd-dim: rgba(36, 255, 138, 0.05);
             --vfd-orange: #ff9d00;
             --vfd-red: #ff3333;
@@ -69,13 +68,6 @@
             text-transform: uppercase;
         }
 
-        .timer-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-        }
-
         .time-display {
             color: var(--vfd-green);
             font-family: 'DS-Digital', sans-serif;
@@ -93,13 +85,7 @@
             min-width: 85px;
         }
 
-        .ind {
-            font-size: 0.6rem;
-            font-weight: bold;
-            color: #121212;
-            text-transform: uppercase;
-        }
-
+        .ind { font-size: 0.6rem; font-weight: bold; color: #121212; text-transform: uppercase; }
         .ind.active { color: var(--vfd-green); text-shadow: 0 0 8px var(--vfd-green); }
 
         .track-grid {
@@ -109,22 +95,19 @@
             gap: 12px;
             margin-top: 10px;
             min-height: 25px;
-            padding: 5px;
         }
 
         .track-num {
             font-family: 'DS-Digital', sans-serif;
             font-size: 1.3rem;
-            color: var(--vfd-green); /* Par défaut vert pour les fichiers chargés */
+            color: var(--vfd-green);
             opacity: 0.8;
-            transition: all 0.3s;
         }
 
         .track-num.active {
             color: var(--vfd-red);
             opacity: 1;
-            text-shadow: 0 0 10px var(--vfd-red), 0 0 5px var(--vfd-red);
-            transform: scale(1.1);
+            text-shadow: 0 0 10px var(--vfd-red);
         }
 
         .track-name-display {
@@ -137,8 +120,8 @@
             white-space: nowrap;
         }
 
-        .vfd-vu-box { background: #000; padding: 10px; border: 1px solid #1a1a1a; margin-bottom: 20px; }
-        canvas { width: 100%; height: 40px; }
+        .vfd-vu-box { background: #000; padding: 10px; border: 1px solid #1a1a1a; margin-bottom: 20px; transition: opacity 0.3s; }
+        canvas { width: 100%; height: 50px; display: block; }
 
         .controls-grid {
             display: grid;
@@ -178,8 +161,7 @@
 
     <div class="display-panel">
         <div id="status-function" class="status-line">NO DISC</div>
-        
-        <div class="timer-row">
+        <div style="display:flex; justify-content:center; align-items:center; gap:15px;">
             <div id="timer" class="time-display">00:00</div>
             <div class="side-indicators">
                 <div id="ind-shuffle" class="ind">Shuffle On</div>
@@ -187,11 +169,8 @@
                 <div id="ind-ab" class="ind">A-B Repeat</div>
             </div>
         </div>
-
         <div id="file-name" class="track-name-display">- - - - -</div>
-        
-        <div id="track-grid" class="track-grid">
-            </div>
+        <div id="track-grid" class="track-grid"></div>
     </div>
 
     <div class="vfd-vu-box" id="vu-container">
@@ -226,7 +205,7 @@
         <input type="range" id="shuttle" min="-10" max="10" value="0" oninput="doShuttle(this.value)" onchange="resetShuttle()">
     </div>
 
-    <div class="file-zone" id="load-box">LOAD MULTIPLE FILES (SHIFT/CTRL + CLICK)</div>
+    <div class="file-zone" id="load-box">LOAD MULTIPLE FILES (CTRL+CLICK)</div>
     <input type="file" id="file-in" style="display:none" accept="audio/*" multiple>
 </div>
 
@@ -242,11 +221,10 @@
     const ctx = canvas.getContext('2d');
     const fileIn = document.getElementById('file-in');
 
-    let playlist = [];
-    let currentIndex = 0;
+    let playlist = [], currentIndex = 0;
     let audioCtx, analyser, dataArray;
     let timeMode = 'elapsed', isRepeat = false, vuVisible = true;
-    let pointA = null, pointB = null;
+    let pointA = null, pointB = null, lastVolume = 0;
 
     document.getElementById('load-box').onclick = () => fileIn.click();
 
@@ -265,7 +243,6 @@
         trackGrid.innerHTML = '';
         playlist.forEach((_, i) => {
             const span = document.createElement('span');
-            // La classe active gère le passage au ROUGE
             span.className = 'track-num' + (i === currentIndex ? ' active' : '');
             span.innerText = (i + 1);
             trackGrid.appendChild(span);
@@ -280,47 +257,27 @@
         audio.load();
     }
 
-    function handlePlay() { 
-        if(playlist.length > 0){ 
-            initAudio(); audio.play(); statusFunc.innerText = "PLAY"; 
-        } 
-    }
-    
-    function handlePause() { audio.pause(); statusFunc.innerText = "PAUSE"; }
-    
-    function handleStop() { 
-        audio.pause(); audio.currentTime = 0; statusFunc.innerText = "STOP"; 
-        pointA = pointB = null; document.getElementById('ind-ab').className = 'ind';
-    }
-
-    function nextTrack() {
-        if(playlist.length === 0) return;
-        currentIndex = (currentIndex + 1) % playlist.length;
-        loadTrack(currentIndex);
-        handlePlay();
-    }
-
-    function prevTrack() {
-        if(playlist.length === 0) return;
-        currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
-        loadTrack(currentIndex);
-        handlePlay();
-    }
-
     function initAudio() {
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 256;
             const source = audioCtx.createMediaElementSource(audio);
             source.connect(analyser);
             analyser.connect(audioCtx.destination);
             dataArray = new Uint8Array(analyser.frequencyBinCount);
             drawVU();
         }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
     }
 
-    audio.onended = () => { if(!isRepeat) nextTrack(); };
+    function handlePlay() { if(playlist.length > 0){ initAudio(); audio.play(); statusFunc.innerText = "PLAY"; }}
+    function handlePause() { audio.pause(); statusFunc.innerText = "PAUSE"; }
+    function handleStop() { audio.pause(); audio.currentTime = 0; statusFunc.innerText = "STOP"; pointA = pointB = null; document.getElementById('ind-ab').className = 'ind'; }
+    function nextTrack() { if(playlist.length === 0) return; currentIndex = (currentIndex + 1) % playlist.length; loadTrack(currentIndex); handlePlay(); }
+    function prevTrack() { if(playlist.length === 0) return; currentIndex = (currentIndex - 1 + playlist.length) % playlist.length; loadTrack(currentIndex); handlePlay(); }
 
+    audio.onended = () => { if(!isRepeat) nextTrack(); };
     audio.ontimeupdate = () => {
         if (pointA !== null && pointB !== null && audio.currentTime >= pointB) audio.currentTime = pointA;
         let t = (timeMode === 'remaining' && audio.duration) ? (audio.duration - audio.currentTime) : audio.currentTime;
@@ -331,8 +288,8 @@
 
     function toggleTime() { timeMode = (timeMode === 'elapsed' ? 'remaining' : 'elapsed'); }
     function toggleRepeat() { isRepeat = !isRepeat; audio.loop = isRepeat; document.getElementById('ind-repeat').classList.toggle('active', isRepeat); }
-    function skip(v) { audio.currentTime += v; }
     function toggleVUMode() { vuVisible = !vuVisible; document.getElementById('vu-container').style.opacity = vuVisible ? "1" : "0"; }
+    function skip(v) { audio.currentTime += v; }
 
     function handleAB() {
         const ind = document.getElementById('ind-ab');
@@ -343,19 +300,54 @@
 
     function drawVU() {
         requestAnimationFrame(drawVU);
-        if(!analyser) return;
+        if(!analyser || !vuVisible) return;
         analyser.getByteFrequencyData(dataArray);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
         let sum = 0;
-        for(let i = 0; i < 20; i++) sum += dataArray[i];
-        let val = sum / 20;
-        ctx.fillStyle = "var(--vfd-green)";
-        ctx.fillRect(0, 10, val * 2, 8);
-        ctx.fillRect(0, 22, val * 1.9, 8);
+        for(let i = 0; i < 15; i++) sum += dataArray[i];
+        let currentVol = sum / 15;
+        
+        if (currentVol < lastVolume) lastVolume -= 1.5;
+        else lastVolume = currentVol;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const segments = 22, gap = 3, segW = (canvas.width / segments) - gap;
+
+        for(let ch = 0; ch < 2; ch++) {
+            let y = (ch === 0) ? 10 : 30;
+            let level = (ch === 0) ? lastVolume : lastVolume * (0.95 + Math.random()*0.1);
+            for(let i = 0; i < segments; i++) {
+                let threshold = (i / segments) * 255;
+                if (level > threshold && level > 10) {
+                    if (i > 18) ctx.fillStyle = var(--vfd-red);
+                    else if (i > 15) ctx.fillStyle = var(--vfd-orange);
+                    else ctx.fillStyle = var(--vfd-green);
+                } else { ctx.fillStyle = "#111"; }
+                ctx.fillRect(i * (segW + gap), y, segW, 12);
+            }
+        }
     }
 
     function doShuttle(v) { if(v != 0) { audio.currentTime += (v * 0.4); statusFunc.innerText = v > 0 ? "SEARCH >>" : "<< SEARCH"; } }
     function resetShuttle() { document.getElementById('shuttle').value = 0; if (audio.src) statusFunc.innerText = audio.paused ? "PAUSE" : "PLAY"; }
+
+    async function runPeak() {
+        if (!audio.src) return;
+        initAudio();
+        statusFunc.innerText = "SCAN PEAK";
+        const res = await fetch(audio.src);
+        const buf = await res.arrayBuffer();
+        const decoded = await audioCtx.decodeAudioData(buf);
+        const data = decoded.getChannelData(0);
+        let max = 0, idx = 0;
+        for(let i=0; i < data.length; i+=1000) { if(Math.abs(data[i]) > max) { max = Math.abs(data[i]); idx = i; } }
+        audio.currentTime = idx / decoded.sampleRate;
+        audio.play();
+        statusFunc.innerText = "PEAK";
+        setTimeout(() => { statusFunc.innerText = "PLAY"; }, 3000);
+    }
+
+    function runAutoCue() { audio.currentTime = 0; audio.pause(); statusFunc.innerText = "AUTO CUE"; }
 </script>
 </body>
 </html>
