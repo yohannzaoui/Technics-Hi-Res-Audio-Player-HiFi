@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Technics SL-PS 740 - Pro Edition</title>
+    <title>Technics SL-PS 740 - Authentic VFD</title>
     <style>
         :root {
-            --bg-color: #0a0a0a;
-            --panel-color: #161616;
-            --display-color: #32ff7e;
-            --text-color: #c0c0c0;
-            --btn-bg: #222;
+            --bg-color: #080808;
+            --panel-color: #141414;
+            --vfd-green: #24ff8a;
+            --vfd-orange: #ff9d00;
+            --vfd-red: #ff3333;
+            --text-color: #b0b0b0;
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -27,60 +28,38 @@
 
         .player-container {
             background: var(--panel-color);
-            padding: 30px;
-            border-radius: 4px;
+            padding: 25px;
+            border-radius: 2px;
             width: 90%;
             max-width: 600px;
-            border: 1px solid #2a2a2a;
-            box-shadow: 0 50px 100px rgba(0,0,0,0.9);
-        }
-
-        .brand-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.65rem;
-            color: #666;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            border: 1px solid #222;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.9);
         }
 
         .display-panel {
             background: #000;
             padding: 20px;
-            border: 2px solid #222;
+            border: 2px solid #1a1a1a;
             margin-bottom: 10px;
             text-align: center;
         }
 
-        .track-info {
-            color: var(--display-color);
-            font-family: 'Courier New', monospace;
-            font-size: 0.8rem;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-        }
-
         .time-display {
-            color: var(--display-color);
+            color: var(--vfd-green);
             font-family: 'Courier New', monospace;
             font-size: 3.5rem;
             font-weight: bold;
-            text-shadow: 0 0 10px rgba(50, 255, 126, 0.3);
+            text-shadow: 0 0 12px rgba(36, 255, 138, 0.3);
         }
 
-        .vfd-vu-container {
+        .vfd-vu-box {
             background: #000;
             padding: 10px;
-            border: 1px solid #222;
+            border: 1px solid #1a1a1a;
             margin-bottom: 20px;
         }
 
-        canvas {
-            width: 100%;
-            height: 60px;
-            display: block;
-        }
+        canvas { width: 100%; height: 50px; display: block; }
 
         .controls-grid {
             display: grid;
@@ -89,60 +68,53 @@
         }
 
         button {
-            background: var(--btn-bg);
+            background: #1e1e1e;
             border: 1px solid #333;
-            color: #eee;
+            color: #ddd;
             padding: 15px 5px;
             font-size: 0.7rem;
             font-weight: bold;
             cursor: pointer;
             text-transform: uppercase;
-            -webkit-appearance: none;
         }
-
-        button:active { background: #444; }
 
         .shuttle-zone {
             margin-top: 25px;
-            background: #0d0d0d;
+            background: #0a0a0a;
             padding: 15px;
-            border-radius: 4px;
         }
 
         .shuttle-label {
             font-size: 0.6rem;
-            color: #555;
+            color: #444;
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             letter-spacing: 2px;
         }
 
-        /* Jog Shuttle Slider Styling (No Yellow) */
         input[type="range"] {
             -webkit-appearance: none;
             width: 100%;
-            background: #2a2a2a;
-            height: 4px;
+            background: #222;
+            height: 3px;
             outline: none;
         }
 
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 30px;
-            height: 18px;
-            background: #444;
-            border: 1px solid #666;
-            border-radius: 2px;
+            width: 35px; height: 18px;
+            background: #3d3d3d;
+            border: 1px solid #555;
             cursor: pointer;
         }
 
-        .file-upload {
-            margin-top: 20px;
+        .file-zone {
+            margin-top: 15px;
             padding: 15px;
-            border: 1px dashed #333;
+            border: 1px dashed #222;
             text-align: center;
-            font-size: 0.8rem;
-            color: #888;
+            font-size: 0.75rem;
+            color: #555;
             cursor: pointer;
         }
     </style>
@@ -150,17 +122,17 @@
 <body>
 
 <div class="player-container">
-    <div class="brand-header">
+    <div style="display:flex; justify-content:space-between; font-size:0.6rem; color:#444; margin-bottom:10px; letter-spacing:1px;">
         <span>Technics</span>
         <span>SL-PS 740 / MASH 1-BIT DAC</span>
     </div>
 
     <div class="display-panel">
-        <div id="status" class="track-info">NO DISC</div>
+        <div id="status" style="color:var(--vfd-green); font-size:0.75rem; font-family:monospace; margin-bottom:5px;">READY</div>
         <div id="timer" class="time-display">00:00</div>
     </div>
 
-    <div class="vfd-vu-container">
+    <div class="vfd-vu-box">
         <canvas id="vu-meter"></canvas>
     </div>
 
@@ -170,61 +142,49 @@
         <button onclick="handleStop()">Stop</button>
         <button onclick="toggleTime()">Time</button>
         <button onclick="runAutoCue()">Auto Cue</button>
-        <button onclick="runPeak()">Peak Search</button>
+        <button onclick="runPeak()">Peak</button>
         <button onclick="skip(-10)">-10s</button>
         <button onclick="skip(10)">+10s</button>
     </div>
 
     <div class="shuttle-zone">
         <div class="shuttle-label">JOG SHUTTLE</div>
-        <input type="range" id="shuttle" min="-10" max="10" value="0" oninput="doShuttle(this.value)" onchange="resetShuttle()">
+        <input type="range" id="shuttle" min="-10" max="10" value="0" oninput="doShuttle(this.value)" onchange="this.value=0">
     </div>
 
-    <div class="file-upload" onclick="document.getElementById('file-input').click()">
-        LOAD AUDIO (MP3, FLAC, WAV, ALAC, AAC)
+    <div class="file-zone" onclick="document.getElementById('file-in').click()">
+        LOAD MEDIA (iPAD COMPATIBLE)
     </div>
-    <input type="file" id="file-input" style="display:none" accept="audio/*, .mp3, .m4a, .mp4, .aac, .wav, .flac, .alac">
+    <input type="file" id="file-in" style="display:none" accept="audio/*, .mp3, .m4a, .wav, .flac">
 </div>
 
-<audio id="audio-engine" crossorigin="anonymous" playsinline></audio>
+<audio id="audio" crossorigin="anonymous" playsinline></audio>
 
 <script>
-    const audio = document.getElementById('audio-engine');
+    const audio = document.getElementById('audio');
     const timer = document.getElementById('timer');
     const statusDisp = document.getElementById('status');
     const canvas = document.getElementById('vu-meter');
     const ctx = canvas.getContext('2d');
-    const shuttle = document.getElementById('shuttle');
 
-    let audioCtx, analyser, dataArray, source, timeMode = 'elapsed';
+    let audioCtx, analyser, dataArray, timeMode = 'elapsed';
+    let lastVolume = 0; // Pour l'amortissement
 
-    // Settings persistence
-    const loadPrefs = () => {
-        const saved = JSON.parse(localStorage.getItem('technics_prefs'));
-        if (saved) timeMode = saved.timeMode || 'elapsed';
-    };
-
-    const savePrefs = () => {
-        localStorage.setItem('technics_prefs', JSON.stringify({ timeMode }));
-    };
-
-    // iPad File Selection Fix
-    document.getElementById('file-input').onchange = (e) => {
+    document.getElementById('file-in').onchange = (e) => {
         const file = e.target.files[0];
         if (file) {
             audio.src = URL.createObjectURL(file);
-            statusDisp.innerText = file.name.toUpperCase().substring(0, 24);
+            statusDisp.innerText = file.name.toUpperCase();
             audio.load();
         }
     };
 
     function initAudio() {
         if (!audioCtx) {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            audioCtx = new AudioContext();
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             analyser = audioCtx.createAnalyser();
-            analyser.fftSize = 256;
-            source = audioCtx.createMediaElementSource(audio);
+            analyser.fftSize = 512;
+            const source = audioCtx.createMediaElementSource(audio);
             source.connect(analyser);
             analyser.connect(audioCtx.destination);
             dataArray = new Uint8Array(analyser.frequencyBinCount);
@@ -236,8 +196,8 @@
     function handlePlay() { if(audio.src){ initAudio(); audio.play(); statusDisp.innerText = "PLAYING"; }}
     function handlePause() { audio.pause(); statusDisp.innerText = "PAUSED"; }
     function handleStop() { audio.pause(); audio.currentTime = 0; statusDisp.innerText = "STOPPED"; }
-    function skip(val) { audio.currentTime += val; }
-    function toggleTime() { timeMode = (timeMode === 'elapsed' ? 'remaining' : 'elapsed'); savePrefs(); }
+    function skip(v) { audio.currentTime += v; }
+    function toggleTime() { timeMode = (timeMode === 'elapsed' ? 'remaining' : 'elapsed'); }
 
     audio.ontimeupdate = () => {
         let t = (timeMode === 'remaining' && audio.duration) ? (audio.duration - audio.currentTime) : audio.currentTime;
@@ -247,73 +207,71 @@
         timer.innerText = `${m}:${s}`;
     };
 
-    // Technics Special Features
     function runAutoCue() { audio.currentTime = 0; audio.pause(); statusDisp.innerText = "AUTO CUE"; }
+    function doShuttle(v) { if(v != 0) audio.currentTime += (v * 0.4); }
 
     async function runPeak() {
         if (!audio.src) return;
         initAudio();
-        statusDisp.innerText = "PEAK SEARCHING...";
-        const response = await fetch(audio.src);
-        const buffer = await response.arrayBuffer();
-        const decoded = await audioCtx.decodeAudioData(buffer);
+        statusDisp.innerText = "SCANNING...";
+        const res = await fetch(audio.src);
+        const buf = await res.arrayBuffer();
+        const decoded = await audioCtx.decodeAudioData(buf);
         const data = decoded.getChannelData(0);
         let max = 0, idx = 0;
-        for(let i=0; i < data.length; i+=100) { // Sampled for speed
-            if(Math.abs(data[i]) > max) { max = Math.abs(data[i]); idx = i; }
-        }
+        for(let i=0; i < data.length; i+=200) { if(Math.abs(data[i]) > max) { max = Math.abs(data[i]); idx = i; }}
         audio.currentTime = idx / decoded.sampleRate;
         audio.play();
-        statusDisp.innerText = "PEAK FOUND";
-        setTimeout(() => audio.pause(), 2500);
+        statusDisp.innerText = "PEAK LEVEL";
+        setTimeout(() => audio.pause(), 2000);
     }
 
-    function doShuttle(v) { if(v != 0) audio.currentTime += (v * 0.4); }
-    function resetShuttle() { shuttle.value = 0; }
-
-    // Technics VFD VU-Meter Logic
     function drawVU() {
         requestAnimationFrame(drawVU);
-        if(!analyser) return;
-
         analyser.getByteFrequencyData(dataArray);
-        
-        // Dynamic Peak Detection for responsiveness
-        let peak = 0;
-        for(let i = 0; i < 20; i++) { if(dataArray[i] > peak) peak = dataArray[i]; }
+
+        // Analyse focalisée sur les médiums/basses pour le réalisme
+        let sum = 0;
+        for(let i = 0; i < 30; i++) sum += dataArray[i];
+        let currentVol = sum / 30;
+
+        // Amortissement (Inertie Technics)
+        if (currentVol < lastVolume) {
+            lastVolume -= 2.5; // Chute lente
+        } else {
+            lastVolume = currentVol; // Montée rapide
+        }
+        if (lastVolume < 0) lastVolume = 0;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        const segments = 24;
+        const segments = 22;
         const gap = 3;
         const segW = (canvas.width / segments) - gap;
-        const segH = 12;
 
         for(let ch = 0; ch < 2; ch++) {
             let y = (ch === 0) ? 10 : 30;
-            // Slight variation for R channel to simulate stereo
-            let chLevel = (ch === 0) ? peak : peak * (0.92 + Math.random() * 0.15);
+            let level = (ch === 0) ? lastVolume : lastVolume * (0.94 + Math.random()*0.1);
 
             for(let i = 0; i < segments; i++) {
-                let threshold = (i / segments) * 230;
-                
-                if (chLevel > threshold && chLevel > 5) {
-                    if (i > segments * 0.85) ctx.fillStyle = "#ff3e3e"; // Red
-                    else if (i > segments * 0.7) ctx.fillStyle = "#ffb347"; // Orange
-                    else ctx.fillStyle = "var(--display-color)"; // Green
+                let threshold = (i / segments) * 190; // Sensibilité ajustée
+                if (level > threshold && level > 5) {
+                    if (i > 18) ctx.fillStyle = var(--vfd-red);
+                    else if (i > 15) ctx.fillStyle = var(--vfd-orange);
+                    else ctx.fillStyle = var(--vfd-green);
+                    ctx.shadowBlur = 4;
+                    ctx.shadowColor = ctx.fillStyle;
                 } else {
-                    ctx.fillStyle = "#1a1a1a"; // Off
+                    ctx.fillStyle = "#111";
+                    ctx.shadowBlur = 0;
                 }
-                ctx.fillRect(i * (segW + gap), y, segW, segH);
+                ctx.fillRect(i * (segW + gap), y, segW, 12);
             }
         }
-        // dB markings
-        ctx.fillStyle = "#444";
-        ctx.font = "9px monospace";
-        ctx.fillText("-∞ -30 -15 -10 -5 -3  0 OVER", 5, 55);
+        ctx.fillStyle = "#333";
+        ctx.font = "8px monospace";
+        ctx.fillText("-20 -10 -7 -5 -3 -1 0 +3 dB", 5, 52);
     }
-
-    window.onload = loadPrefs;
 </script>
 </body>
 </html>
