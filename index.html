@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Technics SL-PS 740 - High-Res Edition</title>
+    <title>Technics SL-PS 740 - Pro VFD Final</title>
     <style>
         :root {
-            --bg-color: #0d0d0d;
-            --panel-color: #1a1a1a;
-            --accent-color: #d4af37;
-            --display-color: #32ff7e;
-            --text-color: #e0e0e0;
+            --bg-color: #080808;
+            --panel-color: #141414;
+            --vfd-green: #24ff8a;
+            --vfd-orange: #ff9d00;
+            --vfd-red: #ff3333;
+            --text-color: #b0b0b0;
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-family: -apple-system, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -28,45 +29,64 @@
         .player-container {
             background: var(--panel-color);
             padding: 25px;
-            border-radius: 12px;
+            border-radius: 4px;
             width: 90%;
             max-width: 600px;
-            border: 1px solid #333;
-            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
-        }
-
-        .brand-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.7rem;
-            color: #666;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            border: 1px solid #222;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.9);
         }
 
         .display-panel {
             background: #000;
-            padding: 20px;
-            border: 2px solid #222;
-            margin-bottom: 15px;
+            padding: 15px;
+            border: 2px solid #1a1a1a;
+            margin-bottom: 10px;
             text-align: center;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+        }
+
+        .status-line {
+            color: var(--vfd-green);
+            font-family: 'Courier New', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            height: 1rem;
+            text-transform: uppercase;
+            font-weight: bold;
         }
 
         .time-display {
-            color: var(--display-color);
+            color: var(--vfd-green);
             font-family: 'Courier New', monospace;
             font-size: 3.5rem;
             font-weight: bold;
-            text-shadow: 0 0 10px rgba(50, 255, 126, 0.5);
+            line-height: 1;
+            text-shadow: 0 0 12px rgba(36, 255, 138, 0.3);
         }
 
-        canvas {
-            width: 100%;
-            height: 80px;
+        .track-name-display {
+            color: var(--vfd-green);
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            opacity: 0.7;
+            text-transform: uppercase;
+        }
+
+        .vfd-vu-box {
             background: #000;
+            padding: 10px;
+            border: 1px solid #1a1a1a;
             margin-bottom: 20px;
         }
+
+        canvas { width: 100%; height: 50px; display: block; }
 
         .controls-grid {
             display: grid;
@@ -75,131 +95,145 @@
         }
 
         button {
-            background: #252525;
-            border: 1px solid #444;
-            color: #fff;
+            background: #1e1e1e;
+            border: 1px solid #333;
+            color: #ddd;
             padding: 15px 5px;
             font-size: 0.7rem;
             font-weight: bold;
             cursor: pointer;
-            -webkit-appearance: none;
-        }
-
-        button:hover { border-color: var(--accent-color); color: var(--accent-color); }
-
-        .shuttle-zone {
-            margin-top: 20px;
-            background: #050505;
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        input[type="range"] {
-            flex-grow: 1;
-            accent-color: var(--accent-color);
-        }
-
-        .file-zone {
-            margin-top: 20px;
-            padding: 20px;
-            border: 2px dashed #444;
-            text-align: center;
-            cursor: pointer;
-            font-size: 0.9rem;
-            color: var(--accent-color);
-            background: #111;
-            border-radius: 8px;
             text-transform: uppercase;
         }
 
-        #file-selector { display: none; }
+        .shuttle-zone {
+            margin-top: 25px;
+            background: #0a0a0a;
+            padding: 15px;
+        }
+
+        .shuttle-label {
+            font-size: 0.6rem;
+            color: #444;
+            text-align: center;
+            margin-bottom: 8px;
+            letter-spacing: 2px;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: #222;
+            height: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 35px; height: 18px;
+            background: #3d3d3d;
+            border: 1px solid #555;
+            cursor: pointer;
+        }
+
+        .file-zone {
+            margin-top: 15px;
+            padding: 15px;
+            border: 1px solid #222;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #444;
+            background: #0a0a0a;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
 <div class="player-container">
-    <div class="brand-header">
+    <div style="display:flex; justify-content:space-between; font-size:0.6rem; color:#444; margin-bottom:10px; letter-spacing:1px;">
         <span>Technics</span>
-        <span>SL-PS 740 / MULTI-FORMAT</span>
+        <span>SL-PS 740 / MASH 1-BIT DAC</span>
     </div>
 
     <div class="display-panel">
-        <div id="track-status" style="color: var(--display-color); font-size: 0.8rem; margin-bottom: 5px;">NO DISC</div>
+        <div id="status-function" class="status-line">NO DISC</div>
         <div id="timer" class="time-display">00:00</div>
+        <div id="file-name" class="track-name-display">- - - - -</div>
     </div>
 
-    <canvas id="visualizer"></canvas>
+    <div class="vfd-vu-box">
+        <canvas id="vu-meter"></canvas>
+    </div>
 
     <div class="controls-grid">
-        <button onclick="handlePlay()">PLAY</button>
-        <button onclick="handlePause()">PAUSE</button>
-        <button onclick="handleStop()">STOP</button>
-        <button onclick="toggleTimeMode()">TIME</button>
-        <button onclick="runAutoCue()">AUTO CUE</button>
-        <button onclick="runPeakSearch()">PEAK</button>
+        <button onclick="handlePlay()">Play</button>
+        <button onclick="handlePause()">Pause</button>
+        <button onclick="handleStop()">Stop</button>
+        <button onclick="toggleTime()">Time</button>
+        <button onclick="runAutoCue()">Auto Cue</button>
+        <button onclick="runPeak()">Peak</button>
         <button onclick="skip(-10)">-10s</button>
         <button onclick="skip(10)">+10s</button>
     </div>
 
     <div class="shuttle-zone">
-        <input type="range" id="shuttle" min="-10" max="10" value="0" oninput="doShuttle(this.value)" onchange="this.value=0">
+        <div class="shuttle-label">JOG SHUTTLE</div>
+        <input type="range" id="shuttle" min="-10" max="10" value="0" oninput="doShuttle(this.value)" onchange="resetShuttle()">
     </div>
 
-    <div class="file-zone" onclick="document.getElementById('file-selector').click()">
-        LOAD AUDIO (MP3, MP4, AAC, FLAC, WAV)
+    <div class="file-zone" id="load-box">
+        LOAD AUDIO FILE
     </div>
-    <input type="file" id="file-selector" 
-           accept="audio/*, .mp3, .m4a, .mp4, .aac, .wav, .flac, .alac, audio/x-flac, audio/flac, audio/mp4">
+    
+    <input type="file" id="file-in" style="display:none" accept="audio/*, .mp3, .m4a, .wav, .flac, .mp4">
 </div>
 
-<audio id="audio-engine" crossorigin="anonymous" playsinline></audio>
+<audio id="audio" crossorigin="anonymous" playsinline></audio>
 
 <script>
-    const audio = document.getElementById('audio-engine');
+    const audio = document.getElementById('audio');
     const timer = document.getElementById('timer');
-    const status = document.getElementById('track-status');
-    const canvas = document.getElementById('visualizer');
+    const statusFunc = document.getElementById('status-function');
+    const fileNameDisp = document.getElementById('file-name');
+    const canvas = document.getElementById('vu-meter');
     const ctx = canvas.getContext('2d');
+    const fileIn = document.getElementById('file-in');
 
-    let audioCtx, analyser, dataArray, source, timeMode = 'elapsed';
+    let audioCtx, analyser, dataArray, timeMode = 'elapsed';
+    let lastVolume = 0;
 
-    // Auto-save preferences
-    const savePrefs = () => localStorage.setItem('technics_prefs', JSON.stringify({timeMode}));
+    document.getElementById('load-box').onclick = () => fileIn.click();
 
-    // Multi-format selector
-    document.getElementById('file-selector').onchange = (e) => {
+    fileIn.onchange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            const url = URL.createObjectURL(file);
-            audio.src = url;
-            status.innerText = file.name.toUpperCase();
-            audio.load(); // Forces iPad Safari to buffer the new format
-            savePrefs();
+            if (audio.src) URL.revokeObjectURL(audio.src);
+            audio.src = URL.createObjectURL(file);
+            fileNameDisp.innerText = file.name.toUpperCase();
+            statusFunc.innerText = "READY";
+            audio.load();
         }
     };
 
     function initAudio() {
         if (!audioCtx) {
-            const AC = window.AudioContext || window.webkitAudioContext;
-            audioCtx = new AC();
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             analyser = audioCtx.createAnalyser();
-            analyser.fftSize = 128;
-            source = audioCtx.createMediaElementSource(audio);
+            analyser.fftSize = 512;
+            const source = audioCtx.createMediaElementSource(audio);
             source.connect(analyser);
             analyser.connect(audioCtx.destination);
             dataArray = new Uint8Array(analyser.frequencyBinCount);
-            drawVisualizer();
+            drawVU();
         }
         if (audioCtx.state === 'suspended') audioCtx.resume();
     }
 
-    function handlePlay() { if(audio.src){ initAudio(); audio.play(); status.innerText = "PLAYING"; }}
-    function handlePause() { audio.pause(); status.innerText = "PAUSED"; }
-    function handleStop() { audio.pause(); audio.currentTime = 0; status.innerText = "STOPPED"; }
+    function handlePlay() { if(audio.src){ initAudio(); audio.play(); statusFunc.innerText = "PLAYING"; }}
+    function handlePause() { audio.pause(); statusFunc.innerText = "PAUSE"; }
+    function handleStop() { audio.pause(); audio.currentTime = 0; statusFunc.innerText = "STOP"; }
     function skip(v) { audio.currentTime += v; }
-    function toggleTimeMode() { timeMode = (timeMode === 'elapsed' ? 'remaining' : 'elapsed'); savePrefs(); }
+    function toggleTime() { timeMode = (timeMode === 'elapsed' ? 'remaining' : 'elapsed'); }
 
     audio.ontimeupdate = () => {
         let t = (timeMode === 'remaining' && audio.duration) ? (audio.duration - audio.currentTime) : audio.currentTime;
@@ -209,47 +243,88 @@
         timer.innerText = `${m}:${s}`;
     };
 
-    // Original Technics Functions
-    function runAutoCue() { audio.currentTime = 0; audio.pause(); status.innerText = "AUTO CUE"; }
+    function runAutoCue() { 
+        audio.currentTime = 0; 
+        audio.pause(); 
+        statusFunc.innerText = "AUTO CUE"; 
+    }
 
-    async function runPeakSearch() {
+    function doShuttle(v) { 
+        if(v != 0) {
+            audio.currentTime += (v * 0.4);
+            statusFunc.innerText = v > 0 ? "SEARCH >>" : "<< SEARCH";
+        }
+    }
+
+    function resetShuttle() {
+        document.getElementById('shuttle').value = 0;
+        if (audio.src) {
+            statusFunc.innerText = audio.paused ? "PAUSE" : "PLAYING";
+        } else {
+            statusFunc.innerText = "READY";
+        }
+    }
+
+    async function runPeak() {
         if (!audio.src) return;
         initAudio();
-        status.innerText = "SCANNING...";
-        const resp = await fetch(audio.src);
-        const buf = await resp.arrayBuffer();
+        statusFunc.innerText = "SCANNING PEAK...";
+        const res = await fetch(audio.src);
+        const buf = await res.arrayBuffer();
         const decoded = await audioCtx.decodeAudioData(buf);
         const data = decoded.getChannelData(0);
         let max = 0, idx = 0;
-        for(let i=0; i < data.length; i++) {
+        for(let i=0; i < data.length; i+=500) { 
             if(Math.abs(data[i]) > max) { max = Math.abs(data[i]); idx = i; }
         }
         audio.currentTime = idx / decoded.sampleRate;
         audio.play();
-        status.innerText = "PEAK LEVEL";
-        setTimeout(() => audio.pause(), 3000);
+        statusFunc.innerText = "PEAK FOUND";
+        setTimeout(() => { 
+            statusFunc.innerText = audio.paused ? "PAUSE" : "PLAYING";
+        }, 2500);
     }
 
-    function doShuttle(v) { if(v != 0) audio.currentTime += (v * 0.4); }
-
-    function drawVisualizer() {
-        requestAnimationFrame(drawVisualizer);
+    function drawVU() {
+        requestAnimationFrame(drawVU);
         if(!analyser) return;
         analyser.getByteFrequencyData(dataArray);
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        const bw = (canvas.width / dataArray.length) * 2;
-        for(let i=0; i<dataArray.length; i++) {
-            const bh = (dataArray[i] / 255) * canvas.height;
-            ctx.fillStyle = `rgb(50, 255, 126)`;
-            ctx.fillRect(i * bw, canvas.height - bh, bw - 2, bh);
-        }
-    }
 
-    window.onload = () => {
-        const saved = JSON.parse(localStorage.getItem('technics_prefs'));
-        if(saved) timeMode = saved.timeMode || 'elapsed';
-    };
+        let sum = 0;
+        for(let i = 0; i < 20; i++) sum += dataArray[i];
+        let currentVol = sum / 20;
+
+        if (currentVol < lastVolume) {
+            lastVolume -= 0.5; 
+        } else {
+            lastVolume = currentVol;
+        }
+        if (lastVolume < 0) lastVolume = 0;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const segments = 22;
+        const gap = 3;
+        const segW = (canvas.width / segments) - gap;
+
+        for(let ch = 0; ch < 2; ch++) {
+            let y = (ch === 0) ? 10 : 30;
+            let level = (ch === 0) ? lastVolume : lastVolume * (0.98 + Math.random()*0.04);
+            for(let i = 0; i < segments; i++) {
+                let threshold = (i / segments) * 280; 
+                if (level > threshold && level > 15) {
+                    if (i > 18) ctx.fillStyle = "#ff3333";
+                    else if (i > 15) ctx.fillStyle = "#ff9d00";
+                    else ctx.fillStyle = "#24ff8a";
+                } else {
+                    ctx.fillStyle = "#111";
+                }
+                ctx.fillRect(i * (segW + gap), y, segW, 12);
+            }
+        }
+        ctx.fillStyle = "#333";
+        ctx.font = "8px monospace";
+        ctx.fillText("-20 -10 -7 -5 -3 -1 0 +3 dB", 5, 52);
+    }
 </script>
 </body>
 </html>
