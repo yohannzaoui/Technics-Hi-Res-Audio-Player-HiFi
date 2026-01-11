@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Technics SL-PS 740</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <title>Technics SL-PS 740 - Dedicated Digital Timer</title>
+    <link href="https://fonts.cdnfonts.com/css/ds-digital" rel="stylesheet">
     <style>
         :root {
             --bg-color: #080808;
             --panel-color: #141414;
             --vfd-green: #24ff8a;
+            --vfd-dim: rgba(36, 255, 138, 0.05);
             --vfd-orange: #ff9d00;
             --vfd-red: #ff3333;
             --text-color: #b0b0b0;
@@ -18,7 +19,7 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: -apple-system, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -43,30 +44,50 @@
             border: 2px solid #1a1a1a;
             margin-bottom: 10px;
             text-align: center;
-            min-height: 140px;
+            min-height: 150px;
             display: flex;
             flex-direction: column;
             justify-content: space-around;
         }
 
+        /* Police standard pour les fonctions */
         .status-line {
             color: var(--vfd-green);
-            font-family: 'Orbitron', sans-serif; /* Police LCD */
-            font-size: 0.65rem;
+            font-family: -apple-system, sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
             letter-spacing: 2px;
-            height: 1rem;
+            height: 1.2rem;
             text-transform: uppercase;
+            opacity: 0.9;
+        }
+
+        .time-wrapper {
+            position: relative;
+            display: inline-block;
+            margin: 5px 0;
+        }
+
+        /* DS-Digital UNIQUEMENT pour le compteur */
+        .time-ghost {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            color: var(--vfd-dim);
+            font-family: 'DS-Digital', sans-serif;
+            font-size: 5rem;
+            font-weight: bold;
+            z-index: 1;
         }
 
         .time-display {
+            position: relative;
             color: var(--vfd-green);
-            font-family: 'Orbitron', sans-serif; /* Police LCD */
-            font-size: 3.2rem;
-            font-weight: 700;
+            font-family: 'DS-Digital', sans-serif;
+            font-size: 5rem;
+            font-weight: bold;
             line-height: 1;
-            /* Effet de lueur typique du VFD Technics */
-            text-shadow: 0 0 15px rgba(36, 255, 138, 0.5), 0 0 2px rgba(36, 255, 138, 0.8);
-            letter-spacing: -2px;
+            text-shadow: 0 0 15px rgba(36, 255, 138, 0.4);
+            z-index: 2;
         }
 
         .track-name-display {
@@ -159,7 +180,10 @@
 
     <div class="display-panel">
         <div id="status-function" class="status-line">NO DISC</div>
-        <div id="timer" class="time-display">00:00</div>
+        <div class="time-wrapper">
+            <div class="time-ghost">88:88</div>
+            <div id="timer" class="time-display">00:00</div>
+        </div>
         <div id="file-name" class="track-name-display">- - - - -</div>
     </div>
 
