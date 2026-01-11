@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Technics SL-PS 740 - Authentic VFD</title>
+    <title>Technics SL-PS 740 - Fixed Loader</title>
     <style>
         :root {
             --bg-color: #080808;
@@ -29,7 +29,7 @@
         .player-container {
             background: var(--panel-color);
             padding: 25px;
-            border-radius: 2px;
+            border-radius: 4px;
             width: 90%;
             max-width: 600px;
             border: 1px solid #222;
@@ -108,14 +108,27 @@
             cursor: pointer;
         }
 
+        /* Amélioration de la zone de clic pour iPad */
         .file-zone {
             margin-top: 15px;
-            padding: 15px;
-            border: 1px dashed #222;
+            padding: 20px;
+            border: 2px dashed #333;
             text-align: center;
-            font-size: 0.75rem;
-            color: #555;
+            font-size: 0.85rem;
+            color: var(--vfd-green);
+            background: #0a0a0a;
             cursor: pointer;
+        }
+
+        .reset-btn {
+            display: block;
+            width: 100%;
+            margin-top: 10px;
+            background: transparent;
+            border: none;
+            color: #333;
+            font-size: 0.6rem;
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -152,10 +165,14 @@
         <input type="range" id="shuttle" min="-10" max="10" value="0" oninput="doShuttle(this.value)" onchange="this.value=0">
     </div>
 
-    <div class="file-zone" onclick="document.getElementById('file-in').click()">
-        LOAD MEDIA (iPAD COMPATIBLE)
+    <div class="file-zone" id="load-box">
+        TAP HERE TO LOAD FILE<br>
+        <span style="font-size: 0.6rem; opacity: 0.6;">(MP3, WAV, FLAC, M4A)</span>
     </div>
-    <input type="file" id="file-in" style="display:none" accept="audio/*, .mp3, .m4a, .wav, .flac">
+    
+    <input type="file" id="file-in" style="display:none" accept="audio/*, .mp3, .m4a, .wav, .flac, .mp4">
+    
+    <button class="reset-btn" onclick="location.reload()">Reload application if blocked</button>
 </div>
 
 <audio id="audio" crossorigin="anonymous" playsinline></audio>
@@ -166,15 +183,26 @@
     const statusDisp = document.getElementById('status');
     const canvas = document.getElementById('vu-meter');
     const ctx = canvas.getContext('2d');
+    const loadBox = document.getElementById('load-box');
+    const fileIn = document.getElementById('file-in');
 
     let audioCtx, analyser, dataArray, timeMode = 'elapsed';
-    let lastVolume = 0; // Pour l'amortissement
+    let lastVolume = 0;
 
-    document.getElementById('file-in').onchange = (e) => {
+    // Fix iPad : Déclenchement propre
+    loadBox.onclick = () => fileIn.click();
+
+    fileIn.onchange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            audio.src = URL.createObjectURL(file);
-            statusDisp.innerText = file.name.toUpperCase();
+            // Nettoyage de l'ancienne URL pour libérer la mémoire
+            if (audio.src) URL.revokeObjectURL(audio.src);
+            
+            const url = URL.createObjectURL(file);
+            audio.src = url;
+            statusDisp.innerText = file.name.toUpperCase().substring(0, 30);
+            
+            // Forcer le chargement sur Safari
             audio.load();
         }
     };
@@ -193,7 +221,19 @@
         if (audioCtx.state === 'suspended') audioCtx.resume();
     }
 
-    function handlePlay() { if(audio.src){ initAudio(); audio.play(); statusDisp.innerText = "PLAYING"; }}
+    function handlePlay() { 
+        if(audio.src){ 
+            initAudio(); 
+            audio.play().catch(e => {
+                statusDisp.innerText = "TAP PLAY AGAIN";
+                console.error(e);
+            }); 
+            statusDisp.innerText = "PLAYING"; 
+        } else {
+            statusDisp.innerText = "LOAD FILE FIRST";
+        }
+    }
+
     function handlePause() { audio.pause(); statusDisp.innerText = "PAUSED"; }
     function handleStop() { audio.pause(); audio.currentTime = 0; statusDisp.innerText = "STOPPED"; }
     function skip(v) { audio.currentTime += v; }
@@ -214,32 +254,38 @@
         if (!audio.src) return;
         initAudio();
         statusDisp.innerText = "SCANNING...";
-        const res = await fetch(audio.src);
-        const buf = await res.arrayBuffer();
-        const decoded = await audioCtx.decodeAudioData(buf);
-        const data = decoded.getChannelData(0);
-        let max = 0, idx = 0;
-        for(let i=0; i < data.length; i+=200) { if(Math.abs(data[i]) > max) { max = Math.abs(data[i]); idx = i; }}
-        audio.currentTime = idx / decoded.sampleRate;
-        audio.play();
-        statusDisp.innerText = "PEAK LEVEL";
-        setTimeout(() => audio.pause(), 2000);
+        try {
+            const res = await fetch(audio.src);
+            const buf = await res.arrayBuffer();
+            const decoded = await audioCtx.decodeAudioData(buf);
+            const data = decoded.getChannelData(0);
+            let max = 0, idx = 0;
+            for(let i=0; i < data.length; i+=300) { 
+                if(Math.abs(data[i]) > max) { max = Math.abs(data[i]); idx = i; }
+            }
+            audio.currentTime = idx / decoded.sampleRate;
+            audio.play();
+            statusDisp.innerText = "PEAK LEVEL";
+            setTimeout(() => audio.pause(), 2000);
+        } catch(e) {
+            statusDisp.innerText = "PEAK ERROR";
+        }
     }
 
     function drawVU() {
         requestAnimationFrame(drawVU);
+        if(!analyser) return;
         analyser.getByteFrequencyData(dataArray);
 
-        // Analyse focalisée sur les médiums/basses pour le réalisme
         let sum = 0;
         for(let i = 0; i < 30; i++) sum += dataArray[i];
         let currentVol = sum / 30;
 
-        // Amortissement (Inertie Technics)
+        // Amortissement doux style VFD Technics
         if (currentVol < lastVolume) {
-            lastVolume -= 2.5; // Chute lente
+            lastVolume -= 1.8; 
         } else {
-            lastVolume = currentVol; // Montée rapide
+            lastVolume = currentVol;
         }
         if (lastVolume < 0) lastVolume = 0;
 
@@ -251,19 +297,16 @@
 
         for(let ch = 0; ch < 2; ch++) {
             let y = (ch === 0) ? 10 : 30;
-            let level = (ch === 0) ? lastVolume : lastVolume * (0.94 + Math.random()*0.1);
+            let level = (ch === 0) ? lastVolume : lastVolume * (0.96 + Math.random()*0.08);
 
             for(let i = 0; i < segments; i++) {
-                let threshold = (i / segments) * 190; // Sensibilité ajustée
+                let threshold = (i / segments) * 180;
                 if (level > threshold && level > 5) {
-                    if (i > 18) ctx.fillStyle = var(--vfd-red);
-                    else if (i > 15) ctx.fillStyle = var(--vfd-orange);
-                    else ctx.fillStyle = var(--vfd-green);
-                    ctx.shadowBlur = 4;
-                    ctx.shadowColor = ctx.fillStyle;
+                    if (i > 18) ctx.fillStyle = "#ff3333";
+                    else if (i > 15) ctx.fillStyle = "#ff9d00";
+                    else ctx.fillStyle = "#24ff8a";
                 } else {
                     ctx.fillStyle = "#111";
-                    ctx.shadowBlur = 0;
                 }
                 ctx.fillRect(i * (segW + gap), y, segW, 12);
             }
