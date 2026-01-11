@@ -10,8 +10,6 @@
             --bg-color: #080808;
             --panel-color: #141414;
             --vfd-green: #24ff8a;
-            --vfd-dim: rgba(36, 255, 138, 0.05);
-            --vfd-orange: #ff9d00;
             --vfd-red: #ff3333;
             --text-color: #b0b0b0;
         }
@@ -82,11 +80,27 @@
             flex-direction: column;
             gap: 5px;
             text-align: left;
-            min-width: 90px;
+            min-width: 140px; /* Élargi pour la ligne horizontale */
         }
 
-        .ind { font-size: 0.6rem; font-weight: bold; color: #121212; text-transform: uppercase; letter-spacing: 1px;}
-        .ind.active { color: var(--vfd-green); text-shadow: 0 0 8px var(--vfd-green); }
+        /* Ligne du haut : Shuffle et A-B */
+        .ind-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .ind { 
+            font-size: 0.6rem; 
+            font-weight: bold; 
+            color: #121212; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            transition: color 0.2s; 
+        }
+        .ind.active { 
+            color: var(--vfd-green); 
+            text-shadow: 0 0 8px var(--vfd-green); 
+        }
 
         .track-grid {
             display: flex;
@@ -130,7 +144,7 @@
         .shuttle-zone { margin-top: 15px; background: #0a0a0a; padding: 15px; }
         .shuttle-label { font-size: 0.6rem; color: #444; text-align: center; margin-bottom: 8px; }
         input[type="range"] { width: 100%; height: 3px; background: #222; outline: none; -webkit-appearance: none; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 30px; height: 15px; background: #444; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 30px; height: 15px; background: #444; cursor: pointer;}
 
         .file-zone { margin-top: 15px; padding: 15px; border: 1px solid #222; text-align: center; font-size: 0.8rem; color: #666; background: #0a0a0a; cursor: pointer; }
     </style>
@@ -148,7 +162,10 @@
         <div style="display:flex; justify-content:center; align-items:center; gap:15px;">
             <div id="timer" class="time-display">00:00</div>
             <div class="side-indicators">
-                <div id="ind-shuffle" class="ind">Shuffle On</div>
+                <div class="ind-row">
+                    <div id="ind-shuffle" class="ind">Shuffle On</div>
+                    <div id="ind-ab" class="ind">A-B Repeat</div>
+                </div>
                 <div id="ind-repeat1" class="ind">Repeat 1</div>
                 <div id="ind-repeatAll" class="ind">Repeat All</div>
             </div>
@@ -208,8 +225,7 @@
     let playlist = [], currentIndex = 0;
     let audioCtx, analyser, dataArray;
     let timeMode = 'elapsed', vuVisible = true;
-    let repeatMode = 0; // 0: None, 1: Repeat 1, 2: Repeat All
-    let isShuffle = false;
+    let repeatMode = 0, isShuffle = false;
     let pointA = null, pointB = null, lastVolume = 0;
 
     document.getElementById('load-box').onclick = () => fileIn.click();
@@ -257,57 +273,48 @@
         if (audioCtx.state === 'suspended') audioCtx.resume();
     }
 
-    function handlePlay() { if(playlist.length > 0){ initAudio(); audio.play(); statusFunc.innerText = isShuffle ? "SHUFFLE ON" : "PLAY"; }}
+    function handlePlay() { if(playlist.length > 0){ initAudio(); audio.play(); statusFunc.innerText = "PLAY"; } }
     function handlePause() { audio.pause(); statusFunc.innerText = "PAUSE"; }
-    function handleStop() { audio.pause(); audio.currentTime = 0; statusFunc.innerText = "STOP"; pointA = pointB = null; }
+    function handleStop() { 
+        audio.pause(); audio.currentTime = 0; statusFunc.innerText = "STOP"; 
+        pointA = pointB = null; 
+        document.getElementById('ind-ab').classList.remove('active');
+    }
 
     function nextTrack() {
         if(playlist.length === 0) return;
-        if(isShuffle) {
-            currentIndex = Math.floor(Math.random() * playlist.length);
-        } else {
-            currentIndex = (currentIndex + 1) % playlist.length;
-        }
+        let wasPlaying = !audio.paused;
+        currentIndex = isShuffle ? Math.floor(Math.random() * playlist.length) : (currentIndex + 1) % playlist.length;
         loadTrack(currentIndex);
-        handlePlay();
+        if(wasPlaying) handlePlay();
     }
 
     function prevTrack() {
         if(playlist.length === 0) return;
+        let wasPlaying = !audio.paused;
         currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
         loadTrack(currentIndex);
-        handlePlay();
+        if(wasPlaying) handlePlay();
     }
 
     audio.onended = () => {
-        if (repeatMode === 1) {
-            audio.currentTime = 0;
-            audio.play();
-        } else if (repeatMode === 2) {
-            nextTrack();
-        } else {
-            if (currentIndex < playlist.length - 1 || isShuffle) {
-                nextTrack();
-            } else {
-                handleStop();
-            }
+        if (repeatMode === 1) { audio.currentTime = 0; audio.play(); } 
+        else if (repeatMode === 2) { nextTrack(); handlePlay(); } 
+        else {
+            if (currentIndex < playlist.length - 1 || isShuffle) { nextTrack(); handlePlay(); } 
+            else { handleStop(); }
         }
     };
 
     function toggleShuffle() {
         isShuffle = !isShuffle;
         document.getElementById('ind-shuffle').classList.toggle('active', isShuffle);
-        if (audio.src && !audio.paused) statusFunc.innerText = isShuffle ? "SHUFFLE ON" : "PLAY";
     }
 
     function toggleRepeat() {
         repeatMode = (repeatMode + 1) % 3;
         document.getElementById('ind-repeat1').classList.toggle('active', repeatMode === 1);
         document.getElementById('ind-repeatAll').classList.toggle('active', repeatMode === 2);
-        
-        if (repeatMode === 1) statusFunc.innerText = "REPEAT 1";
-        else if (repeatMode === 2) statusFunc.innerText = "REPEAT ALL";
-        else if (audio.src) statusFunc.innerText = isShuffle ? "SHUFFLE ON" : (audio.paused ? "PAUSE" : "PLAY");
     }
 
     audio.ontimeupdate = () => {
@@ -324,17 +331,23 @@
 
     function handleAB() {
         const ind = document.getElementById('ind-ab');
-        if (pointA === null) { pointA = audio.currentTime; statusFunc.innerText = "A-"; }
-        else if (pointB === null) { pointB = audio.currentTime; statusFunc.innerText = "A-B LOOP"; }
-        else { pointA = pointB = null; statusFunc.innerText = "PLAY"; }
+        if (pointA === null) { 
+            pointA = audio.currentTime; 
+            ind.classList.add('active'); // S'allume au premier clic (Point A)
+        } else if (pointB === null) { 
+            pointB = audio.currentTime; 
+            // Reste allumé (Point B validé)
+        } else { 
+            pointA = pointB = null; 
+            ind.classList.remove('active'); // S'éteint si on annule
+        }
     }
 
     function drawVU() {
         requestAnimationFrame(drawVU);
         if(!analyser || !vuVisible) return;
         analyser.getByteFrequencyData(dataArray);
-        let sum = 0;
-        for(let i = 0; i < 15; i++) sum += dataArray[i];
+        let sum = 0; for(let i = 0; i < 15; i++) sum += dataArray[i];
         let currentVol = sum / 15;
         if (currentVol < lastVolume) lastVolume -= 1.5; else lastVolume = currentVol;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -355,9 +368,9 @@
     }
 
     function doShuttle(v) { if(v != 0) { audio.currentTime += (v * 0.4); statusFunc.innerText = v > 0 ? "SEARCH >>" : "<< SEARCH"; } }
-    function resetShuttle() { document.getElementById('shuttle').value = 0; if (audio.src) statusFunc.innerText = isShuffle ? "SHUFFLE ON" : (audio.paused ? "PAUSE" : "PLAY"); }
+    function resetShuttle() { document.getElementById('shuttle').value = 0; if (audio.src) statusFunc.innerText = audio.paused ? "PAUSE" : "PLAY"; }
     function runAutoCue() { audio.currentTime = 0; audio.pause(); statusFunc.innerText = "AUTO CUE"; }
-    function runPeak() { statusFunc.innerText = "SCAN PEAK"; setTimeout(() => { statusFunc.innerText = "PEAK"; audio.currentTime = audio.duration * 0.3; audio.play(); }, 1000); }
+    function runPeak() { statusFunc.innerText = "PEAK"; setTimeout(() => { statusFunc.innerText = "PLAY"; audio.currentTime = audio.duration * 0.3; audio.play(); }, 1000); }
 </script>
 </body>
 </html>
