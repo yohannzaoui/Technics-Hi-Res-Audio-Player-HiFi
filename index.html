@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Technics SL-PS 740 - Authentic Labels</title>
+    <title>Technics SL-PS 740</title>
     <link href="https://fonts.cdnfonts.com/css/ds-digital" rel="stylesheet">
     <style>
         :root {
@@ -118,6 +118,16 @@
             text-shadow: 0 0 8px rgba(36, 255, 138, 0.5);
         }
 
+        /* Animation pour le mode A-B en attente */
+        @keyframes blink {
+            50% { color: #121212; text-shadow: none; }
+        }
+        .ind.blink {
+            animation: blink 0.8s step-end infinite;
+            color: var(--vfd-green);
+            text-shadow: 0 0 8px rgba(36, 255, 138, 0.5);
+        }
+
         .track-name-display {
             color: var(--vfd-green);
             font-family: 'Courier New', monospace;
@@ -222,6 +232,7 @@
             <div class="side-indicators">
                 <div id="ind-shuffle" class="ind">Shuffle On</div>
                 <div id="ind-repeat" class="ind">Repeat On</div>
+                <div id="ind-ab" class="ind">A-B Repeat</div>
             </div>
         </div>
 
@@ -249,8 +260,8 @@
     <div class="controls-grid">
         <button onclick="toggleShuffle()">Shuffle</button>
         <button onclick="toggleRepeat()">Repeat</button>
+        <button onclick="handleAB()">A-B</button>
         <button onclick="toggleVUMode()">VU</button>
-        <button onclick="showCover()">Cover</button>
     </div>
 
     <div class="shuttle-zone">
@@ -281,6 +292,9 @@
     let isRepeat = false;
     let isShuffle = false;
     let vuVisible = true;
+    
+    let pointA = null;
+    let pointB = null;
 
     document.getElementById('load-box').onclick = () => fileIn.click();
 
@@ -309,10 +323,16 @@
         if (audioCtx.state === 'suspended') audioCtx.resume();
     }
 
-    // MODIF: Changement de PLAYING vers PLAY
     function handlePlay() { if(audio.src){ initAudio(); audio.play(); statusFunc.innerText = "PLAY"; }}
     function handlePause() { audio.pause(); statusFunc.innerText = "PAUSE"; }
-    function handleStop() { audio.pause(); audio.currentTime = 0; statusFunc.innerText = "STOP"; }
+    function handleStop() { 
+        audio.pause(); 
+        audio.currentTime = 0; 
+        statusFunc.innerText = "STOP"; 
+        pointA = null; pointB = null; 
+        document.getElementById('ind-ab').className = 'ind';
+    }
+    
     function skip(v) { audio.currentTime += v; }
     function toggleTime() { timeMode = (timeMode === 'elapsed' ? 'remaining' : 'elapsed'); }
 
@@ -327,17 +347,37 @@
         document.getElementById('ind-shuffle').classList.toggle('active', isShuffle);
     }
 
+    function handleAB() {
+        if (!audio.src) return;
+        const ind = document.getElementById('ind-ab');
+
+        if (pointA === null) {
+            pointA = audio.currentTime;
+            ind.classList.add('blink'); // Clignote en attendant le point B
+        } else if (pointB === null) {
+            pointB = audio.currentTime;
+            if (pointB <= pointA) { pointB = null; return; }
+            ind.classList.remove('blink');
+            ind.classList.add('active'); // Reste fixe une fois la boucle active
+        } else {
+            pointA = null;
+            pointB = null;
+            ind.className = 'ind'; // Éteint
+        }
+    }
+
     function toggleVUMode() {
         vuVisible = !vuVisible;
         document.getElementById('vu-container').style.opacity = vuVisible ? "1" : "0";
     }
 
-    function showCover() {
-        statusFunc.innerText = "INFO";
-        setTimeout(() => { if (audio.src) statusFunc.innerText = audio.paused ? "PAUSE" : "PLAY"; }, 1500);
-    }
-
     audio.ontimeupdate = () => {
+        if (pointA !== null && pointB !== null) {
+            if (audio.currentTime >= pointB) {
+                audio.currentTime = pointA;
+            }
+        }
+
         let t = (timeMode === 'remaining' && audio.duration) ? (audio.duration - audio.currentTime) : audio.currentTime;
         if (isNaN(t) || t < 0) t = 0;
         const m = Math.floor(t / 60).toString().padStart(2, '0');
