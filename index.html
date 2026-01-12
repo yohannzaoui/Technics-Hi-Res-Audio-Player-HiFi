@@ -5,22 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Technics SL-PS740A</title>
     
-    <meta name="author" content="Yohann Zaoui">
-    <meta name="owner" content="Yohann Zaoui">
-    <meta name="description" content="Technics SL-PS740A Digital Audio Player Interface">
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
-
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#141414">
-
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="SL-PS740A">
     
     <link rel="icon" type="image/png" sizes="512x512" href="img/favicon_512.png">
     <link rel="apple-touch-icon" href="img/favicon_512.png">
-    
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#141414">
     <link href="https://fonts.cdnfonts.com/css/ds-digital" rel="stylesheet">
     
     <style>
@@ -28,7 +22,7 @@
             --bg-color: #080808;
             --panel-color: #141414;
             --vfd-green: #24ff8a;
-            --vfd-red: #ff3333;
+            --vfd-red: #ff3333; /* Rouge VFD pour les alertes et formats */
             --text-color: #b0b0b0;
         }
 
@@ -56,11 +50,7 @@
             font-weight: bold; text-transform: uppercase; letter-spacing: 1px;
         }
 
-        .brand-logo-img {
-            height: 70px; width: auto; display: block;
-            filter: drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.8)) 
-                    drop-shadow(0px 1px 0px rgba(255, 255, 255, 0.1));
-        }
+        .brand-logo-img { height: 70px; width: auto; display: block; filter: drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.8)); }
 
         .display-panel {
             background: #000; padding: 15px; border: 2px solid #1a1a1a;
@@ -80,39 +70,32 @@
             display: flex; justify-content: center; align-items: center;
         }
 
-        .time-display span { width: 1ch; text-align: center; display: inline-block; }
+        .time-display span { width: 1ch; text-align: center; }
         .time-display .separator { width: 0.4ch; margin-bottom: 0.1em; }
 
-        .side-indicators {
-            display: flex; flex-direction: column; gap: 5px;
-            text-align: left; min-width: 140px;
-        }
-
+        .side-indicators { display: flex; flex-direction: column; gap: 5px; text-align: left; min-width: 140px; }
         .ind-row { display: flex; gap: 15px; }
-
-        .ind { 
-            font-size: 0.6rem; font-weight: bold; color: #121212; 
-            text-transform: uppercase; letter-spacing: 1px; transition: color 0.2s; 
-        }
+        .ind { font-size: 0.6rem; font-weight: bold; color: #121212; text-transform: uppercase; }
         .ind.active { color: var(--vfd-green); text-shadow: 0 0 8px var(--vfd-green); }
 
-        .format-badge {
-            font-size: 0.6rem; font-weight: bold; color: var(--vfd-green);
-            opacity: 0; margin-top: 2px; letter-spacing: 1px;
-            text-transform: uppercase; transition: opacity 0.3s;
+        /* Style de l'indicateur de format passé en rouge */
+        #format-info { 
+            font-size: 0.65rem; 
+            font-weight: 900; 
+            color: var(--vfd-red); 
+            text-shadow: 0 0 8px rgba(255, 51, 51, 0.5);
+            opacity: 0; 
+            letter-spacing: 1px;
         }
 
         .track-name-display {
             color: var(--vfd-green); font-family: 'Courier New', monospace;
             font-size: 0.7rem; opacity: 0.6; text-transform: uppercase;
             overflow: hidden; white-space: nowrap; margin: 5px 0;
+            cursor: pointer;
         }
 
-        .track-grid {
-            display: flex; justify-content: center; flex-wrap: wrap;
-            gap: 12px; padding: 10px 0; border-top: 1px solid #111;
-        }
-
+        .track-grid { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; padding: 10px 0; border-top: 1px solid #111; }
         .track-num { font-size: 0.85rem; font-weight: 600; color: var(--vfd-green); opacity: 0.3; }
         .track-num.active { color: var(--vfd-red); opacity: 1; text-shadow: 0 0 10px var(--vfd-red); }
 
@@ -120,24 +103,37 @@
         canvas { width: 100%; height: 100%; display: block; }
 
         .controls-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 10px; }
+        .controls-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
+        
         button {
             background: #1e1e1e; border: 1px solid #333; color: #ddd;
             padding: 10px 2px; font-size: 0.6rem; font-weight: bold;
             cursor: pointer; text-transform: uppercase; border-radius: 2px;
         }
         button:active { background: #333; }
+        .btn-large { padding: 15px !important; }
 
-        .controls-grid-large { 
-            display: grid; 
-            grid-template-columns: repeat(4, 1fr); 
-            gap: 8px; 
-            margin-bottom: 10px; 
-        }
-        
-        .shuttle-zone { margin-top: 15px; background: #0a0a0a; padding: 15px; }
+        .shuttle-zone { margin-top: 15px; background: #0a0a0a; padding: 15px; border-radius: 2px; }
         .shuttle-label { font-size: 0.6rem; color: #ffffff; text-align: center; margin-bottom: 8px; font-weight: bold; }
         input[type="range"] { width: 100%; height: 3px; background: #222; outline: none; -webkit-appearance: none; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 30px; height: 15px; background: #444; cursor: pointer;}
+        input[type="range"]::-webkit-slider-thumb { 
+            -webkit-appearance: none; width: 40px; height: 16px; background: #444; border: 1px solid #666; cursor: pointer;
+        }
+
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.92);
+            justify-content: center; align-items: center;
+        }
+        .modal-content { 
+            position: relative; 
+            width: 280px; 
+            height: 280px;
+            background: #000;
+            border: 2px solid #333;
+            box-shadow: 0 0 30px rgba(0,0,0,1);
+        }
+        .modal-content img { width: 100%; height: 100%; object-fit: contain; display: block; }
     </style>
 </head>
 <body>
@@ -150,7 +146,6 @@
 
     <div class="display-panel">
         <div id="status-function" class="status-line">NO DISC</div>
-        
         <div style="display:flex; justify-content:center; align-items:center; gap:15px;">
             <div id="timer" class="time-display">
                 <span id="m1">0</span><span id="m2">0</span><span class="separator">:</span><span id="s1">0</span><span id="s2">0</span>
@@ -159,13 +154,12 @@
                 <div class="ind-row">
                     <div id="ind-shuffle" class="ind">Shuffle</div> <div id="ind-ab" class="ind">A-B Repeat</div>
                 </div>
-                <div id="format-info" class="format-badge">---</div>
+                <div id="format-info">---</div>
                 <div id="ind-repeat1" class="ind">Repeat 1</div>
                 <div id="ind-repeatAll" class="ind">Repeat All</div>
             </div>
         </div>
-
-        <div id="file-name" class="track-name-display">- - - - -</div>
+        <div id="file-name" class="track-name-display" onclick="openArtModal()">- - - - -</div>
         <div id="track-grid" class="track-grid"></div>
         <div class="vfd-vu-integrated" id="vu-container">
             <canvas id="vu-meter" width="800" height="120"></canvas>
@@ -181,25 +175,25 @@
         <button onclick="toggleTime()">Time</button>
     </div>
     
-    <div class="controls-grid" style="grid-template-columns: repeat(4, 1fr);">
+    <div class="controls-grid-4">
         <button onclick="runAutoCue()">Auto Cue</button>
         <button onclick="runPeak()">Peak</button>
         <button onclick="skip(-10)">-10s</button>
         <button onclick="skip(10)">+10s</button>
     </div>
 
-    <div class="controls-grid" style="grid-template-columns: repeat(4, 1fr);">
+    <div class="controls-grid-4">
         <button onclick="toggleShuffle()">Shuffle</button>
         <button onclick="toggleRepeat()">Repeat</button>
         <button onclick="handleAB()">A-B</button>
         <button onclick="toggleVUMode()">VU</button>
     </div>
 
-    <div class="controls-grid-large">
-        <button onclick="handleOpen()" style="padding: 15px;">Open</button>
-        <button onclick="changeVolume(-0.1)" onmouseover="showVolume()" onmouseout="hideVolume()" style="padding: 15px;">VOL -</button>
-        <button onclick="changeVolume(0.1)" onmouseover="showVolume()" onmouseout="hideVolume()" style="padding: 15px;">VOL +</button>
-        <button onclick="handleClose()" style="padding: 15px;">Close</button>
+    <div class="controls-grid-4">
+        <button class="btn-large" onclick="handleOpen()">Open</button>
+        <button class="btn-large" onclick="changeVolume(-0.1)" onmouseover="showVolume()" onmouseout="hideVolume()">VOL -</button>
+        <button class="btn-large" onclick="changeVolume(0.1)" onmouseover="showVolume()" onmouseout="hideVolume()">VOL +</button>
+        <button class="btn-large" onclick="handleClose()">Close</button>
     </div>
 
     <div class="shuttle-zone">
@@ -208,6 +202,12 @@
     </div>
 
     <input type="file" id="file-in" style="display:none" accept="audio/*" multiple>
+</div>
+
+<div id="artModal" class="modal" onclick="closeArtModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <img id="modalImg" src="img/Technics_logo.png">
+    </div>
 </div>
 
 <audio id="audio" crossorigin="anonymous" playsinline></audio>
@@ -221,35 +221,83 @@
     const canvas = document.getElementById('vu-meter');
     const ctx = canvas.getContext('2d');
     const fileIn = document.getElementById('file-in');
+    const modal = document.getElementById('artModal');
+    const modalImg = document.getElementById('modalImg');
 
-    const m1 = document.getElementById('m1'), m2 = document.getElementById('m2');
-    const s1 = document.getElementById('s1'), s2 = document.getElementById('s2');
+    const m1 = document.getElementById('m1'), m2 = document.getElementById('m2'), s1 = document.getElementById('s1'), s2 = document.getElementById('s2');
 
-    let playlist = [], currentIndex = 0;
-    let audioCtx, analyser, dataArray;
-    let timeMode = 'elapsed', vuVisible = true;
-    let repeatMode = 0, isShuffle = false;
-    let pointA = null, pointB = null, lastVolume = 0;
-    let previousStatus = "READY";
+    let playlist = [], currentIndex = 0, currentArtURL = "";
+    let audioCtx, analyser, dataArray, timeMode = 'elapsed', vuVisible = true, repeatMode = 0, isShuffle = false;
+    let pointA = null, pointB = null, lastVolume = 0, previousStatus = "READY";
 
-    // Initialisation au chargement
-    window.onload = () => {
-        audio.volume = 0.2; // Volume à 2 au lancement
-    };
+    window.onload = () => { audio.volume = 0.2; };
 
-    // --- VOLUME & DISPLAY ---
-    function changeVolume(delta) {
-        audio.volume = Math.min(1, Math.max(0, audio.volume + delta));
-        showVolume();
-    }
-    function showVolume() {
-        if (!statusFunc.innerText.includes("VOLUME")) previousStatus = statusFunc.innerText;
-        const volLevel = Math.round(audio.volume * 10);
-        statusFunc.innerText = `VOLUME: ${volLevel}`;
-    }
+    function changeVolume(delta) { audio.volume = Math.min(1, Math.max(0, audio.volume + delta)); showVolume(); }
+    function showVolume() { if (!statusFunc.innerText.includes("VOLUME")) previousStatus = statusFunc.innerText; statusFunc.innerText = `VOLUME: ${Math.round(audio.volume * 10)}`; }
     function hideVolume() { statusFunc.innerText = previousStatus; }
 
-    // --- NAVIGATION LOGIQUE ---
+    function handleOpen() { fileIn.click(); }
+    fileIn.onchange = (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length > 0) { playlist = files; currentIndex = 0; updateTrackDisplay(); loadTrack(0); statusFunc.innerText = "READY"; }
+    };
+
+    function loadTrack(index) {
+        const file = playlist[index];
+        if (audio.src) URL.revokeObjectURL(audio.src);
+        audio.src = URL.createObjectURL(file);
+        
+        // Mise à jour du format en rouge
+        formatInfo.innerText = file.name.split('.').pop().toUpperCase();
+        formatInfo.style.opacity = "1";
+        
+        if (window.jsmediatags) {
+            window.jsmediatags.read(file, {
+                onSuccess: function(tag) {
+                    const t = tag.tags;
+                    fileNameDisp.innerText = `${t.artist || "UNKNOWN"} - ${t.album || "UNKNOWN"} - ${t.title || file.name}`.toUpperCase();
+                    if (currentArtURL) URL.revokeObjectURL(currentArtURL);
+                    if (t.picture) {
+                        const { data, format } = t.picture;
+                        currentArtURL = URL.createObjectURL(new Blob([new Uint8Array(data)], { type: format }));
+                        modalImg.src = currentArtURL;
+                    } else { modalImg.src = "img/Technics_logo.png"; }
+                    updateMediaSession(t.title || file.name, t.artist || "TECHNICS", t.album || "CD PLAYER");
+                },
+                onError: function() { fileNameDisp.innerText = file.name.toUpperCase(); modalImg.src = "img/Technics_logo.png"; }
+            });
+        }
+        updateTrackDisplay(); audio.load();
+    }
+
+    function openArtModal() { if(playlist.length > 0) modal.style.display = "flex"; }
+    function closeArtModal() { modal.style.display = "none"; }
+
+    function updateMediaSession(t, a, al) {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({ title: t, artist: a, album: al, artwork: [{ src: 'img/favicon_512.png', sizes: '512x512', type: 'image/png' }] });
+            navigator.mediaSession.setActionHandler('play', handlePlay);
+            navigator.mediaSession.setActionHandler('pause', handlePause);
+            navigator.mediaSession.setActionHandler('previoustrack', prevTrack);
+            navigator.mediaSession.setActionHandler('nexttrack', nextTrack);
+        }
+    }
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioCtx.createAnalyser(); analyser.fftSize = 256;
+            const source = audioCtx.createMediaElementSource(audio);
+            source.connect(analyser); analyser.connect(audioCtx.destination);
+            dataArray = new Uint8Array(analyser.frequencyBinCount); drawVU();
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function handlePlay() { if(playlist.length > 0){ initAudio(); audio.play(); statusFunc.innerText = "PLAY"; } }
+    function handlePause() { audio.pause(); statusFunc.innerText = "PAUSE"; }
+    function handleStop() { audio.pause(); audio.currentTime = 0; statusFunc.innerText = "STOP"; pointA = pointB = null; document.getElementById('ind-ab').classList.remove('active'); }
+
     function nextTrack() {
         if(playlist.length === 0) return;
         if(repeatMode === 1) { audio.currentTime = 0; handlePlay(); return; }
@@ -264,73 +312,6 @@
         loadTrack(currentIndex); handlePlay();
     }
 
-    // --- MEDIA SESSION & FILES ---
-    function handleOpen() { fileIn.click(); }
-    fileIn.onchange = (e) => {
-        const files = Array.from(e.target.files);
-        if (files.length > 0) {
-            playlist = files; currentIndex = 0;
-            updateTrackDisplay(); loadTrack(0);
-            statusFunc.innerText = "READY";
-        }
-    };
-
-    function loadTrack(index) {
-        const file = playlist[index];
-        if (audio.src) URL.revokeObjectURL(audio.src);
-        audio.src = URL.createObjectURL(file);
-        const ext = file.name.split('.').pop().toUpperCase();
-        formatInfo.innerText = ext; formatInfo.style.opacity = "1";
-
-        if (window.jsmediatags) {
-            window.jsmediatags.read(file, {
-                onSuccess: function(tag) {
-                    const t = tag.tags;
-                    const artist = t.artist || "UNKNOWN";
-                    const album = t.album || "UNKNOWN";
-                    const title = t.title || file.name.replace(/\.[^/.]+$/, "");
-                    fileNameDisp.innerText = `${artist} - ${album} - ${title}`.toUpperCase();
-                    updateMediaSession(title, artist, album);
-                },
-                onError: function() { 
-                    const title = file.name.toUpperCase();
-                    fileNameDisp.innerText = title; 
-                    updateMediaSession(title, "TECHNICS", "SL-PS740A");
-                }
-            });
-        }
-        updateTrackDisplay(); audio.load();
-    }
-
-    function updateMediaSession(title, artist, album) {
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.metadata = new MediaMetadata({
-                title: title, artist: artist, album: album,
-                artwork: [{ src: 'img/favicon_512.png', sizes: '512x512', type: 'image/png' }]
-            });
-            navigator.mediaSession.setActionHandler('play', handlePlay);
-            navigator.mediaSession.setActionHandler('pause', handlePause);
-            navigator.mediaSession.setActionHandler('previoustrack', prevTrack);
-            navigator.mediaSession.setActionHandler('nexttrack', nextTrack);
-        }
-    }
-
-    function initAudio() {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = audioCtx.createAnalyser(); analyser.fftSize = 256;
-            const source = audioCtx.createMediaElementSource(audio);
-            source.connect(analyser); analyser.connect(audioCtx.destination);
-            dataArray = new Uint8Array(analyser.frequencyBinCount);
-            drawVU();
-        }
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-    }
-
-    function handlePlay() { if(playlist.length > 0){ initAudio(); audio.play(); statusFunc.innerText = "PLAY"; } }
-    function handlePause() { audio.pause(); statusFunc.innerText = "PAUSE"; }
-    function handleStop() { audio.pause(); audio.currentTime = 0; statusFunc.innerText = "STOP"; pointA = pointB = null; document.getElementById('ind-ab').classList.remove('active'); }
-
     function toggleShuffle() { isShuffle = !isShuffle; document.getElementById('ind-shuffle').classList.toggle('active', isShuffle); }
     function toggleRepeat() {
         repeatMode = (repeatMode + 1) % 3;
@@ -338,12 +319,7 @@
         document.getElementById('ind-repeatAll').classList.toggle('active', repeatMode === 2);
     }
 
-    audio.onended = () => {
-        if(repeatMode === 1) { audio.currentTime = 0; audio.play(); }
-        else if(repeatMode === 2 || currentIndex < playlist.length - 1) { nextTrack(); }
-        else { handleStop(); }
-    };
-
+    audio.onended = () => { if(repeatMode === 1) { audio.currentTime = 0; audio.play(); } else if(repeatMode === 2 || currentIndex < playlist.length - 1) { nextTrack(); } else { handleStop(); } };
     audio.ontimeupdate = () => {
         if (pointA !== null && pointB !== null && audio.currentTime >= pointB) audio.currentTime = pointA;
         let t = (timeMode === 'remaining' && audio.duration) ? (audio.duration - audio.currentTime) : audio.currentTime;
@@ -400,7 +376,7 @@
         m1.innerText = "0"; m2.innerText = "0"; s1.innerText = "0"; s2.innerText = "0";
         statusFunc.innerText = "NO DISC"; fileNameDisp.innerText = "- - - - -";
         formatInfo.style.opacity = "0"; trackGrid.innerHTML = "";
-        isShuffle = false; repeatMode = 0;
+        isShuffle = false; repeatMode = 0; modalImg.src = "img/Technics_logo.png";
         document.querySelectorAll('.ind').forEach(el => el.classList.remove('active'));
     }
     function runAutoCue() {
@@ -417,16 +393,6 @@
             setTimeout(() => { audio.pause(); audio.currentTime = 0; statusFunc.innerText = "READY"; }, 3000);
         }, 1500);
     }
-</script>
-
-<script>
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-            .then(reg => console.log('SW Registered'))
-            .catch(err => console.log('SW Registration failed', err));
-    });
-}
 </script>
 </body>
 </html>
