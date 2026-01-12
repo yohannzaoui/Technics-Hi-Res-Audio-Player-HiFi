@@ -2,7 +2,7 @@
 
 # Technics SL-PS740A Digital Audio Player - Documentation
 
-## ⚙️ Core Specifications
+##  Core Specifications
 
 * **Author & Owner**: Yohann Zaoui
 * **Copyright**: Copyright © 2026 Yohann Zaoui. All rights reserved.
