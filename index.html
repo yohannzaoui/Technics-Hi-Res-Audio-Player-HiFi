@@ -43,18 +43,21 @@
             margin-bottom: 10px;
             font-size: 0.75rem;
             color: #888;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .display-panel {
             background: #000;
             padding: 15px;
             border: 2px solid #1a1a1a;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
             text-align: center;
-            min-height: 180px;
+            min-height: 250px;
             display: flex;
             flex-direction: column;
-            justify-content: space-around;
+            justify-content: space-between;
         }
 
         .status-line {
@@ -91,30 +94,6 @@
         }
         .ind.active { color: var(--vfd-green); text-shadow: 0 0 8px var(--vfd-green); }
 
-        .track-grid {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-top: 10px;
-        }
-
-        /* MISE À JOUR : Police identique à status-line */
-        .track-num {
-            font-family: inherit; 
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--vfd-green);
-            opacity: 0.4;
-            letter-spacing: 1px;
-        }
-
-        .track-num.active {
-            color: var(--vfd-red);
-            opacity: 1;
-            text-shadow: 0 0 10px var(--vfd-red);
-        }
-
         .track-name-display {
             color: var(--vfd-green);
             font-family: 'Courier New', monospace;
@@ -123,10 +102,41 @@
             text-transform: uppercase;
             overflow: hidden;
             white-space: nowrap;
+            margin: 5px 0;
+        }
+        .ind.active { color: var(--vfd-green); text-shadow: 0 0 8px var(--vfd-green); }
+
+        .track-grid {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 10px 0;
+            border-top: 1px solid #111;
         }
 
-        .vfd-vu-box { background: #000; padding: 10px; border: 1px solid #1a1a1a; margin-bottom: 20px; }
-        canvas { width: 100%; height: 50px; display: block; }
+        /* MISE À JOUR : Police identique à status-line */
+        .track-num {
+            font-family: inherit; 
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--vfd-green);
+            opacity: 0.3;
+        }
+
+        .track-num.active {
+            color: var(--vfd-red);
+            opacity: 1;
+            text-shadow: 0 0 10px var(--vfd-red);
+        }
+
+        /* VU Meter intégré en bas de l'afficheur */
+        .vfd-vu-integrated {
+            width: 100%;
+            height: 35px;
+            margin-top: 5px;
+        }
+        canvas { width: 100%; height: 100%; display: block; }
 
         .controls-grid {
             display: grid;
@@ -140,6 +150,13 @@
             cursor: pointer; text-transform: uppercase;
         }
         button:active { background: #333; }
+
+        .controls-grid-large {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
 
         .shuttle-zone { margin-top: 15px; background: #0a0a0a; padding: 15px; }
         .shuttle-label { font-size: 0.6rem; color: #444; text-align: center; margin-bottom: 8px; }
@@ -157,6 +174,7 @@
 
     <div class="display-panel">
         <div id="status-function" class="status-line">NO DISC</div>
+        
         <div style="display:flex; justify-content:center; align-items:center; gap:15px;">
             <div id="timer" class="time-display">00:00</div>
             <div class="side-indicators">
@@ -168,12 +186,14 @@
                 <div id="ind-repeatAll" class="ind">Repeat All</div>
             </div>
         </div>
-        <div id="file-name" class="track-name-display">- - - - -</div>
-        <div id="track-grid" class="track-grid"></div>
-    </div>
 
-    <div class="vfd-vu-box" id="vu-container">
-        <canvas id="vu-meter"></canvas>
+        <div id="file-name" class="track-name-display">- - - - -</div>
+        
+        <div id="track-grid" class="track-grid"></div>
+
+        <div class="vfd-vu-integrated" id="vu-container">
+            <canvas id="vu-meter"></canvas>
+        </div>
     </div>
 
     <div class="controls-grid">
@@ -199,7 +219,7 @@
         <button onclick="toggleVUMode()">VU</button>
     </div>
 
-    <div class="controls-grid" style="grid-template-columns: repeat(2, 1fr);">
+    <div class="controls-grid-large">
         <button onclick="handleOpen()" style="padding: 15px;">Open</button>
         <button onclick="handleClose()" style="padding: 15px;">Close</button>
     </div>
@@ -237,6 +257,7 @@
         playlist = [];
         currentIndex = 0;
         audio.src = "";
+        fileIn.value = "";
         timer.innerText = "00:00";
         statusFunc.innerText = "NO DISC";
         fileNameDisp.innerText = "- - - - -";
@@ -345,7 +366,10 @@
     };
 
     function toggleTime() { timeMode = (timeMode === 'elapsed' ? 'remaining' : 'elapsed'); }
-    function toggleVUMode() { vuVisible = !vuVisible; document.getElementById('vu-container').style.opacity = vuVisible ? "1" : "0"; }
+    function toggleVUMode() { 
+        vuVisible = !vuVisible; 
+        document.getElementById('vu-container').style.visibility = vuVisible ? "visible" : "hidden"; 
+    }
     function skip(v) { audio.currentTime += v; }
 
     function handleAB() {
@@ -365,7 +389,7 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         const segments = 22, gap = 3, segW = (canvas.width / segments) - gap;
         for(let ch = 0; ch < 2; ch++) {
-            let y = (ch === 0) ? 10 : 30;
+            let y = (ch === 0) ? 5 : 20;
             let level = (ch === 0) ? lastVolume : lastVolume * (0.95 + Math.random()*0.1);
             for(let i = 0; i < segments; i++) {
                 let threshold = (i / segments) * 255;
@@ -374,7 +398,7 @@
                     else if (i > 15) ctx.fillStyle = "#ff9d00";
                     else ctx.fillStyle = "#24ff8a";
                 } else { ctx.fillStyle = "#111"; }
-                ctx.fillRect(i * (segW + gap), y, segW, 12);
+                ctx.fillRect(i * (segW + gap), y, segW, 10);
             }
         }
     }
