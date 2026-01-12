@@ -1,3 +1,4 @@
+
 ---
 
 # Technics SL-PS740A Digital Audio Player - Documentation
@@ -47,8 +48,8 @@
 > ├── **manifest.json** (PWA identity & icons)
 > ├── **sw.js** (Service Worker for offline support)
 > └── img/
-> ├── Technics_logo.png (70px height)
-> └── favicon_512.png (App icon & Media Artwork)
+> ├── **Technics_logo.png** (70px height)
+> └── **favicon_512.png** (App icon & Media Artwork)
 
 ---
 
@@ -58,7 +59,7 @@
 
 * **Standalone Mode**: The app runs in full-screen without the browser URL bar.
 * **Offline Ready**: Assets are cached by the `sw.js` (Service Worker) for instant loading.
-* **OS Integration**: Control playback via the lock screen and system media widgets.
+* **OS Integration**: Control playback via the lock screen and system media widgets (Media Session API).
 
 ### 2. How to Install
 
@@ -68,22 +69,37 @@
 
 ---
 
+## 📖 User Guide
+
+### 1. Track Navigation
+
+* **Play/Pause**: Toggles playback. Status shows `PLAY` or `PAUSE`.
+* **Next/Previous (`>>` / `<<`)**: Navigation without vertical bars on buttons for a cleaner look.
+* **Stop**: Resets timer and clears A-B points.
+
+### 2. Jog Shuttle (Search Mode)
+
+* Move the slider at the bottom to scrub through the track.
+* The status display will indicate search direction (`SEARCH >>` or `<< SEARCH`).
+* The slider resets to 0 automatically when released.
+
+### 3. A-B Repeat Function
+
+* **Press 1**: Sets Point A (Start).
+* **Press 2**: Sets Point B (End) and begins looping.
+* **Press 3**: Clears the loop.
+
+---
+
 ## 🛠 Recent Fixes (2026-01-12)
 
 | Feature | Update Description |
 | --- | --- |
 | **PWA Support** | Added `sw.js` and `manifest.json` for full standalone installation. |
 | **Logo** | Resized to **70px** for better visual balance. |
-| **Navigation** | Removed vertical bars from `<<` and `>>` buttons. |
+| **Navigation** | Simplified buttons to `<<` and `>>` (removed bars). |
 | **Stability** | Separated timer digits into individual containers to stop text movement. |
-| **Shuffle** | Changed indicator label from "SHUFFLE ON" to just "SHUFFLE". |
+| **Shuffle** | Changed indicator label to only display "**SHUFFLE**". |
 
 ---
 
-## 📖 User Guide Summary
-
-* **Jog Shuttle**: Use the bottom slider for variable-speed scrubbing.
-* **A-B Repeat**: Press once for Start, twice for End, three times to Clear.
-* **Time Mode**: Tap the "Time" button to toggle between Elapsed and Remaining.
-
----
