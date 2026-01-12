@@ -1,5 +1,3 @@
-
-
 ---
 
 # Technics SL-PS740A Digital Audio Player - Documentation
@@ -26,12 +24,13 @@
 ### 2. Brand Identity
 
 * **Logo**: High-definition `Technics_logo.png` set to exactly **70px** height.
-* **Relief Effect**: Custom CSS filters applied to the logo for a 3D metallic look.
+* **Relief Effect**: Custom CSS filters applied to the logo for a 3D metallic look:
+`filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.8)) drop-shadow(0px 1px 0px rgba(255,255,255,0.1));`
 
 ### 3. Integrated Audio Tools
 
 * **VU Meter**: Dual-channel (L/R) canvas-based visualizer with peak-hold simulation.
-* **Jog Shuttle**: A functional range slider for manual track scrubbing with dynamic status feedback.
+* **Jog Shuttle**: A functional range slider for manual track scrubbing with dynamic status feedback (`SEARCH >>`).
 * **Indicators**:
 * "SHUFFLE: Displays only the word 'SHUFFLE' when active."
 * "REPEAT: Cycles through 'Repeat 1' and 'Repeat All'."
@@ -44,11 +43,28 @@
 ## 📂 Project Structure
 
 > /Project-Root
-> ├── index.html (Core application & logic)
-> ├── manifest.json (PWA configuration)
+> ├── **index.html** (Core application & logic)
+> ├── **manifest.json** (PWA identity & icons)
+> ├── **sw.js** (Service Worker for offline support)
 > └── img/
 > ├── Technics_logo.png (70px height)
 > └── favicon_512.png (App icon & Media Artwork)
+
+---
+
+## 📱 PWA & Installation Guide
+
+### 1. Features
+
+* **Standalone Mode**: The app runs in full-screen without the browser URL bar.
+* **Offline Ready**: Assets are cached by the `sw.js` (Service Worker) for instant loading.
+* **OS Integration**: Control playback via the lock screen and system media widgets.
+
+### 2. How to Install
+
+* **On iOS (Safari)**: Tap the **Share** button → Select **"Add to Home Screen"**.
+* **On Android (Chrome)**: Tap the **Three Dots** menu → Select **"Install App"**.
+* **On Desktop (Chrome/Edge)**: Click the **Install Icon** in the address bar.
 
 ---
 
@@ -56,6 +72,7 @@
 
 | Feature | Update Description |
 | --- | --- |
+| **PWA Support** | Added `sw.js` and `manifest.json` for full standalone installation. |
 | **Logo** | Resized to **70px** for better visual balance. |
 | **Navigation** | Removed vertical bars from `<<` and `>>` buttons. |
 | **Stability** | Separated timer digits into individual containers to stop text movement. |
@@ -63,60 +80,10 @@
 
 ---
 
-## 📱 Mobile & PWA Optimization
+## 📖 User Guide Summary
 
-* **Meta Tags**: Full support for `apple-mobile-web-app-capable` to hide the Safari URL bar.
-* **Media Session API**: Allows track control and metadata display on the phone's lock screen and Bluetooth devices.
----
-
-## 📖 User Guide
-
-### 1. Track Navigation & Playback
-
-* **Play/Pause**: Starts or pauses the current track. The status line will toggle between `PLAY` and `PAUSE`.
-* **Next/Previous (`>>` / `<<`)**: Skips to the next or previous track in the playlist. The active track number will glow red in the track grid.
-* **Stop**: Stops playback and resets the timer to `00:00`. It also clears any active **A-B Repeat** points.
-
-### 2. Jog Shuttle (Search Mode)
-
-The **Jog Shuttle** at the bottom allows for precision scrubbing within a track:
-
-* **Forward Search**: Move the slider to the right to fast-forward. The status will display `SEARCH >>`.
-* **Backward Search**: Move the slider to the left to rewind. The status will display `<< SEARCH`.
-* **Variable Speed**: The further you move the slider, the faster the search becomes. Releasing the slider (or letting it snap back to center) resumes normal playback.
-
-### 3. A-B Repeat Function
-
-This allows you to loop a specific section of a song:
-
-1. While a track is playing, press **A-B** once to set the start point (**Point A**). The `A-B Repeat` indicator will light up.
-2. Press **A-B** a second time to set the end point (**Point B**). The player will now loop continuously between these two points.
-3. Press **A-B** a third time to clear the loop and return to normal playback.
-
-### 4. Advanced Display Features
-
-* **Time Toggle**: Press the **Time** button to switch between:
-* `Elapsed Time`: Time passed since the start of the track.
-* `Remaining Time`: Countdown until the end of the track.
-
-
-* **VU Mode**: Press **VU** to toggle the visibility of the fluorescent level meters if you prefer a minimal interface.
-* **Peak Search**: Simulates the hardware's ability to find the loudest part of a disc (useful for setting recording levels).
-
-### 5. Playback Modes
-
-* **Shuffle**: Randomizes the play order. The indicator will show **SHUFFLE**.
-* **Repeat**:
-* `Repeat 1`: Loops the current track indefinitely.
-* `Repeat All`: Loops the entire playlist.
-
-
+* **Jog Shuttle**: Use the bottom slider for variable-speed scrubbing.
+* **A-B Repeat**: Press once for Start, twice for End, three times to Clear.
+* **Time Mode**: Tap the "Time" button to toggle between Elapsed and Remaining.
 
 ---
-
-## 💾 Saving Preferences
-
-The application is designed to remember your settings. Your **Language** (English) and **Theme** (Dark Mode) are automatically saved in your browser's local storage so that the player is ready the moment you reopen it.
-
----
-
