@@ -1,41 +1,77 @@
-Technics SL-PS 740 Digital Audio Player
-A MASH 1-BIT DAC Inspired Web Interface
-This project is a high-fidelity web-based audio player designed to replicate the aesthetic and ergonomic experience of the legendary Technics SL-PS 740 CD player from the early 1990s. It features a custom-built VFD (Vacuum Fluorescent Display) simulation and a reactive Jog Shuttle control.
-📻 Key Features
-1. Authentic VFD Simulation
-The display panel is divided into three logical sections, mimicking the original hardware:
- * Function Line: Displays current operations (PLAYING, PAUSE, STOP, AUTO CUE, SEARCH).
- * Time Counter: A high-contrast emerald green digital clock showing elapsed or remaining time.
- * Track Info: Displays the filename of the loaded digital media in a permanent uppercase scrolling-style font.
-2. Calibrated VU-Meter
-Unlike standard web visualizers, this VU-meter is specifically tuned for a vintage feel:
- * Segmented Display: 22 discrete segments per channel.
- * Damping Logic: Integrated physics-based damping to simulate the slight inertia of gas-discharge displays.
- * Low Sensitivity: Calibrated with a high threshold to prevent "jitter" and provide a stable, professional level-reading experience.
-3. Jog Shuttle Control
- * Velocity Search: Moving the slider allows for variable-speed scrubbing through the track.
- * Status Feedback: The display switches to SEARCH >> or << SEARCH during manipulation.
- * Auto-Reset: Upon release, the slider snaps back to center, and the display instantly restores the previous playback state (PLAYING or PAUSE).
-4. Technics Specialized Functions
- * Auto Cue: Resets the laser (playback head) to the exact beginning of the track and enters pause mode.
- * Peak Search: Scans the entire audio file to find the highest volume peak and plays it for 2 seconds—a classic feature for setting recording levels.
-🛠 Technical Specifications
-| Feature | Specification |
-|---|---|
-| Core Engine | HTML5 Web Audio API |
-| Visuals | HTML5 Canvas (Hardware Accelerated) |
-| Compatibility | Optimized for iPadOS (Safari), Chrome, and Firefox |
-| Formats | MP3, FLAC, ALAC (M4A), WAV, AAC |
-| Theme | Fixed Dark Mode (VFD Fluorescent) |
-🚀 How to Use
- * Load Media: Click the "LOAD AUDIO FILE" zone at the bottom to select a file from your device.
- * Playback: Use the PLAY/PAUSE/STOP buttons for standard control.
- * Navigation: * Use +10s / -10s for quick skips.
-   * Use the JOG SHUTTLE slider for precise positioning.
- * Time Toggle: Click TIME to switch between elapsed time and remaining time.
- * Peak Search: Use the PEAK button to automatically find the loudest part of your song.
-💾 Persistence
-The player uses localStorage to remember your preferences:
- * Your preferred Time Mode (Elapsed vs Remaining) is saved automatically and restored when you reopen the browser.
-> Note: This application is designed to run entirely client-side. No audio data is ever uploaded to a server; all processing happens locally on your device's 1-BIT MASH emulated logic.
-> 
+---
+
+# Technics SL-PS740A Digital Audio Player - Technical Documentation
+
+This project is a high-fidelity web-based reproduction of the **Technics SL-PS740A** CD Player interface. It is designed as a Progressive Web App (PWA) with a focus on visual accuracy and vintage audio aesthetics.
+
+## 🛠 Features & Capabilities
+
+### 1. High-Fidelity Display (VFD Style)
+
+* **Stable Digit System:** Uses a custom "slotting" system (individual `<span>` per digit) to ensure the time display remains perfectly still, even when the number "1" is displayed.
+* **Technics Branding:** Integrated **70px** high-resolution logo with a realistic relief/shadow effect.
+* **Integrated VU Meter:** Dual-channel (L/R) frequency visualizer based on the Web Audio API, styled after vintage vacuum fluorescent displays.
+* **Status Indicators:** Real-time feedback for `PLAY`, `PAUSE`, `STOP`, and search modes.
+
+### 2. Audio Control Engine
+
+* **MASH 1-BIT DAC Simulation:** A visual nod to Technics' proprietary technology.
+* **Jog Shuttle:** Functional slider for variable-speed track searching.
+* **A-B Repeat:** Set specific loop points within a track.
+* **Playback Modes:** Support for **Shuffle** (simplified display) and **Repeat** (1 / All).
+* **Advanced Tools:** Includes `Auto Cue` and `Peak Search` visual simulations.
+
+### 3. Modern Connectivity
+
+* **Media Session API:** Seamless integration with OS-level media controls (Lock screen, Keyboard media keys, Chrome media hub).
+* **PWA Ready:** Includes manifest and meta tags for "Add to Home Screen" installation on iOS and Android.
+* **Responsive Dark Mode:** Strictly enforced dark theme with high-contrast VFD green (`#24ff8a`) and red (`#ff3333`) accents.
+
+---
+
+## 🏗 Code Structure Overview
+
+### CSS Variables
+
+The interface relies on a central color palette for easy maintenance:
+
+```css
+:root {
+    --bg-color: #080808;
+    --panel-color: #141414;
+    --vfd-green: #24ff8a;
+    --vfd-red: #ff3333;
+}
+
+```
+
+### Key Logic Modules
+
+* **Audio Context:** Initializes the `AnalyserNode` for the VU meter upon the first user interaction.
+* **Time Formatting:** Calculates elapsed/remaining time and maps characters to the stable grid.
+* **Playlist Management:** Handles multiple file uploads and maintains the active track state.
+
+---
+
+## 📂 File Requirements
+
+To ensure the application works correctly, the following directory structure is expected:
+
+* `index.html` (The core application)
+* `manifest.json` (PWA configuration)
+* `img/`
+* `Technics_logo.png` (70px height recommended)
+* `favicon_512.png` (For PWA and Media Session artwork)
+
+
+
+---
+
+## 📝 Recent Modifications (2026-01-12)
+
+* **Logo Size:** Increased to **70px** for better brand visibility.
+* **Button UI:** Removed vertical bars from `<<` and `>>` navigation buttons.
+* **Timer Stability:** Implemented the character-width fix to prevent text "jumping".
+* **Shuffle Logic:** Simplified the indicator text to "SHUFFLE" instead of "SHUFFLE ON".
+
+---
