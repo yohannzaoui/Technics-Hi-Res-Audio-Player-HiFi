@@ -54,7 +54,7 @@
             border: 2px solid #1a1a1a;
             margin-bottom: 20px;
             text-align: center;
-            min-height: 280px; /* Augmenté pour le VU plus épais */
+            min-height: 280px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -130,9 +130,10 @@
 
         .vfd-vu-integrated {
             width: 100%;
-            height: 50px; /* Plus d'espace pour les bandes épaisses */
-            margin-top: 5px;
+            height: 60px;
+            margin-top: 10px;
         }
+        /* Canvas haute résolution */
         canvas { width: 100%; height: 100%; display: block; }
 
         .controls-grid {
@@ -189,7 +190,7 @@
         <div id="track-grid" class="track-grid"></div>
 
         <div class="vfd-vu-integrated" id="vu-container">
-            <canvas id="vu-meter"></canvas>
+            <canvas id="vu-meter" width="800" height="120"></canvas>
         </div>
     </div>
 
@@ -383,15 +384,25 @@
         let sum = 0; for(let i = 0; i < 15; i++) sum += dataArray[i];
         let currentVol = sum / 15;
         if (currentVol < lastVolume) lastVolume -= 1.5; else lastVolume = currentVol;
+        
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        const segments = 22, gap = 3;
-        const segW = (canvas.width / segments) - gap;
-        const barHeight = 15; // Épaisseur des traits
-        const spacing = 10;   // Espace entre les deux bandes (L/R)
+        const segments = 22, gap = 8;
+        const startX = 60; // Plus d'espace pour les labels
+        const segW = ((canvas.width - startX) / segments) - gap;
+        const barHeight = 35;
+        const spacing = 20;
+
+        ctx.font = "bold 32px sans-serif";
+        ctx.textAlign = "left";
 
         for(let ch = 0; ch < 2; ch++) {
-            let y = (ch === 0) ? 5 : 5 + barHeight + spacing;
+            let y = (ch === 0) ? 10 : 10 + barHeight + spacing;
+            
+            // Labels L / R en vert VFD
+            ctx.fillStyle = "#24ff8a";
+            ctx.fillText(ch === 0 ? "L" : "R", 10, y + 28);
+
             let level = (ch === 0) ? lastVolume : lastVolume * (0.95 + Math.random()*0.1);
             
             for(let i = 0; i < segments; i++) {
@@ -401,7 +412,7 @@
                     else if (i > 15) ctx.fillStyle = "#ff9d00";
                     else ctx.fillStyle = "#24ff8a";
                 } else { ctx.fillStyle = "#111"; }
-                ctx.fillRect(i * (segW + gap), y, segW, barHeight);
+                ctx.fillRect(startX + i * (segW + gap), y, segW, barHeight);
             }
         }
     }
