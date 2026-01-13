@@ -1,0 +1,19 @@
+{
+  "name": "Technics SL-PS740A Player",
+  "short_name": "SL-PS740A",
+  "description": "Technics Digital Audio Player Interface",
+  "start_url": "index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080808",
+  "theme_color": "#141414",
+  "icons": [
+    {
+      "src": "img/favicon_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
+

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Technics SL-PS740A</title>
+    
+    <meta name="author" content="Yohann Zaoui">
+    <meta name="copyright" content="Copyright © 2026 Yohann Zaoui. All rights reserved.">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SL-PS740A">
+    
+    <link rel="icon" type="image/png" sizes="512x512" href="img/favicon_512.png">
+    <link rel="apple-touch-icon" href="img/favicon_512.png">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+    <link rel="manifest" href="manifest.json">
+    <link href="https://fonts.cdnfonts.com/css/ds-digital" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/styleB.css">
+</head>
+<body>
+
+<div class="player-container">
+    <div class="header-line">
+        <img src="img/Technics_logo.png" alt="Technics" class="brand-logo-img">
+        <span><a href="indexC.html" class="invisible-link">SL-PS740A / MASH 1-BIT DAC</a></span>
+    </div>
+
+    <div class="display-panel">
+        <div id="status-function" class="status-line">NO DISC</div>
+        <div class="display-main-row">
+            <div id="timer" class="time-display">
+                <span id="m1">0</span><span id="m2">0</span><span class="separator">:</span><span id="s1">0</span><span id="s2">0</span>
+            </div>
+            <div class="side-indicators">
+                <div class="ind-row">
+                    <div id="ind-shuffle" class="ind">Shuffle</div> 
+                    <div id="ind-ab" class="ind">A-B Repeat</div>
+                </div>
+                <div id="format-info">---</div>
+                <div id="ind-repeat1" class="ind">Repeat 1</div>
+                <div id="ind-repeatAll" class="ind">Repeat All</div>
+            </div>
+        </div>
+        <div id="file-name" class="track-name-display" onclick="openArtModal()">- - - - -</div>
+        <div id="track-grid" class="track-grid"></div>
+        <div class="vfd-vu-integrated" id="vu-container">
+            <canvas id="vu-meter" width="800" height="120"></canvas>
+        </div>
+    </div>
+
+    <div class="controls-grid">
+        <button onclick="handlePlay()">Play</button>
+        <button onclick="handlePause()">Pause</button>
+        <button onclick="prevTrack()"><<</button>
+        <button onclick="nextTrack()">>></button>
+        <button onclick="handleStop()">Stop</button>
+        <button onclick="toggleTime()">Time</button>
+    </div>
+    
+    <div class="controls-grid-4">
+        <button onclick="runAutoCue()">Auto Cue</button>
+        <button onclick="runPeak()">Peak</button>
+        <button onclick="skip(-10)">-10s</button>
+        <button onclick="skip(10)">+10s</button>
+    </div>
+
+    <div class="controls-grid-4">
+        <button onclick="toggleShuffle()">Shuffle</button>
+        <button onclick="toggleRepeat()">Repeat</button>
+        <button onclick="handleAB()">A-B</button>
+        <button onclick="toggleVUMode()">VU</button>
+    </div>
+
+    <div class="controls-grid-4">
+        <button class="btn-large" onclick="handleOpen()">Open</button>
+        <button class="btn-large" onclick="changeVolume(-0.1)" onmouseover="showVolume()" onmouseout="hideVolume()">VOL -</button>
+        <button class="btn-large" onclick="changeVolume(0.1)" onmouseover="showVolume()" onmouseout="hideVolume()">VOL +</button>
+        <button class="btn-large" onclick="handleClose()">Close</button>
+    </div>
+
+    <div class="shuttle-zone">
+        <div class="shuttle-label">JOG SHUTTLE</div>
+        <input type="range" id="shuttle" min="-10" max="10" value="0" oninput="doShuttle(this.value)" onchange="resetShuttle()">
+    </div>
+
+    <input type="file" id="file-in" style="display:none" accept="audio/*" multiple>
+</div>
+
+<div id="artModal" class="modal" onclick="closeArtModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <img id="modalImg" src="img/Technics_logo.png">
+    </div>
+</div>
+
+<audio id="audio" crossorigin="anonymous" playsinline></audio>
+
+<script src="js/script.js"></script>
+
+</body>
+</html>

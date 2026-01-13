@@ -1,0 +1,133 @@
+/* --- TECHNICS SL-PS740A CHAMPAGNE THEME --- */
+:root {
+    --bg-color: #dcd0c0;      /* Champagne / Aluminium brossé */
+    --panel-color: #e8dfd1;   /* Façade aluminium claire */
+    /* Bleu-Vert Cobalt authentique Technics VFD */
+    --vfd-cyan: #00ffcc; 
+    /* Rouge VFD chaud */
+    --vfd-red: #ff3c22; 
+    --text-color: #4a453e;    /* Bronze profond pour les lettrages façade */
+    --vfd-shadow-cyan: rgba(0, 255, 204, 0.4);
+    --vfd-shadow-red: rgba(255, 60, 34, 0.6);
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh; margin: 0;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none; user-select: none;
+}
+
+.player-container {
+    background: var(--panel-color);
+    padding: 25px; border-radius: 4px;
+    width: 90%; max-width: 600px;
+    border: 1px solid #c5baaa; /* Bordure aluminium anodisé */
+    box-shadow: 0 40px 100px rgba(0,0,0,0.15);
+}
+
+.header-line {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px; font-size: 0.75rem; color: #7a7065;
+    font-weight: bold; text-transform: uppercase; letter-spacing: 1px;
+}
+
+.brand-logo-img { 
+    height: 70px; width: auto; display: block; 
+    /* Effet de gravure : ombre claire en bas, ombre sombre en haut */
+    filter: drop-shadow(0px 1px 0px rgba(255,255,255,0.8)) drop-shadow(0px -1px 1px rgba(0,0,0,0.3)); 
+}
+
+.display-panel {
+    background: #000; padding: 15px; border: 2px solid #b5a99a;
+    margin-bottom: 20px; text-align: center; min-height: 280px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    box-shadow: inset 0 0 15px rgba(0,0,0,1);
+}
+
+.status-line {
+    color: var(--vfd-cyan); font-size: 0.75rem; font-weight: 600;
+    letter-spacing: 2px; height: 1.2rem; text-transform: uppercase;
+    text-shadow: 0 0 8px var(--vfd-shadow-cyan);
+    /* Optionnel: pour que le texte JOG (Forward/Rewind) ressemble aux boutons */
+    font-family: -apple-system, sans-serif; 
+}
+
+.display-main-row { display: flex; justify-content: center; align-items: center; gap: 15px; }
+
+.time-display {
+    color: var(--vfd-cyan); font-family: 'DS-Digital', sans-serif;
+    font-size: 5rem; font-weight: normal; line-height: 1;
+    text-shadow: 0 0 15px var(--vfd-shadow-cyan);
+    display: flex; justify-content: center; align-items: center;
+}
+
+.time-display span { width: 1ch; text-align: center; }
+.time-display .separator { width: 0.4ch; margin-bottom: 0.1em; }
+
+.side-indicators { display: flex; flex-direction: column; gap: 5px; text-align: left; min-width: 140px; }
+.ind-row { display: flex; gap: 15px; }
+.ind { font-size: 0.6rem; font-weight: bold; color: #222; text-transform: uppercase; transition: 0.2s; }
+.ind.active { color: var(--vfd-cyan); text-shadow: 0 0 8px var(--vfd-shadow-cyan); }
+
+#format-info { 
+    font-size: 0.65rem; font-weight: 900; 
+    color: var(--vfd-red); 
+    text-shadow: 0 0 10px var(--vfd-shadow-red);
+    opacity: 0; letter-spacing: 1px;
+}
+
+.track-name-display { color: var(--vfd-cyan); font-family: monospace; font-size: 0.7rem; opacity: 0.8; margin: 10px 0; height: 1.2em; overflow: hidden; white-space: nowrap; text-transform: uppercase; cursor: pointer;}
+
+.track-grid { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; padding: 10px 0; border-top: 1px solid #1a1a1a; }
+
+.track-num { font-size: 0.85rem; font-weight: 600; color: var(--vfd-cyan); opacity: 0.3; }
+.track-num.active { 
+    color: var(--vfd-red); 
+    opacity: 1; 
+    text-shadow: 0 0 12px var(--vfd-shadow-red); 
+}
+
+.vfd-vu-integrated { width: 100%; height: 60px; margin-top: 10px; }
+canvas { width: 100%; height: 100%; display: block; filter: drop-shadow(0 0 2px rgba(0,255,204,0.2)); }
+
+.controls-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 10px; }
+.controls-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
+
+button {
+    background: #f5f0e6; border: 1px solid #c5baaa; color: var(--text-color);
+    padding: 10px 2px; font-size: 0.6rem; font-weight: bold;
+    cursor: pointer; text-transform: uppercase; border-radius: 2px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 2px rgba(0,0,0,0.05);
+}
+button:active { background: #e5dac8; transform: translateY(1px); box-shadow: inset 0 1px 2px rgba(0,0,0,0.1); }
+.btn-large { padding: 15px !important; }
+
+.shuttle-zone { margin-top: 15px; background: rgba(0,0,0,0.05); padding: 15px; border-radius: 2px; border: 1px solid #c5baaa; }
+.shuttle-label { font-size: 0.6rem; color: var(--text-color); text-align: center; margin-bottom: 8px; font-weight: bold; text-transform: uppercase; }
+
+input[type="range"] { width: 100%; height: 3px; background: #c5baaa; outline: none; -webkit-appearance: none; }
+input[type="range"]::-webkit-slider-thumb { 
+    -webkit-appearance: none; width: 40px; height: 16px; background: #f5f0e6; border: 1px solid #c5baaa; cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.modal {
+    display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+    width: 100%; height: 100%; background: rgba(0,0,0,0.9);
+    justify-content: center; align-items: center;
+}
+.modal-content { 
+    position: relative; width: 300px; height: 300px;
+    background: #000; border: 4px solid var(--panel-color); box-shadow: 0 0 50px rgba(0,0,0,0.5);
+}
+.modal-content img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+.invisible-link {
+    text-decoration: none; /* Enlève le soulignement */
+    color: inherit;        /* Prend la couleur du texte parent */
+    cursor: default;       /* Garde la flèche de souris normale au lieu de la main */
+}
