@@ -1,6 +1,6 @@
 :root {
     --bg-color: #080808;
-    --panel-color: #141414;
+    --panel-color: #262322; /* Brown Technics */
     /* Bleu-Vert Cobalt authentique Technics VFD */
     --vfd-cyan: #00ffcc; 
     /* Rouge VFD chaud */
@@ -56,7 +56,7 @@ body {
 
 .time-display {
     color: var(--vfd-cyan); font-family: 'DS-Digital', sans-serif;
-    font-size: 5rem; font-weight: bold; line-height: 1;
+    font-size: 5rem; font-weight: normal; line-height: 1;
     text-shadow: 0 0 15px var(--vfd-shadow-cyan);
     display: flex; justify-content: center; align-items: center;
 }
@@ -76,11 +76,7 @@ body {
     opacity: 0; letter-spacing: 1px;
 }
 
-.track-name-display {
-    color: var(--vfd-cyan); font-family: 'Courier New', monospace;
-    font-size: 0.7rem; opacity: 0.5; text-transform: uppercase;
-    overflow: hidden; white-space: nowrap; margin: 5px 0; cursor: pointer;
-}
+.track-name-display { color: var(--vfd-cyan); font-family: monospace; font-size: 0.7rem; opacity: 0.8; margin: 10px 0; height: 1.2em; overflow: hidden; white-space: nowrap; text-transform: uppercase; cursor: pointer;}
 
 .track-grid { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; padding: 10px 0; border-top: 1px solid #111; }
 
