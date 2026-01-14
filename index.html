@@ -146,7 +146,6 @@
         .vu-meters { transition: opacity 0.3s ease; }
         .vu-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
         .vu-label { color: #08181a; font-family: var(--ui-font); font-size: 12px; font-weight: bold; width: 15px; transition: color 0.3s; }
-        .vu-label.active { color: var(--vfd-blue-dim); }
         .vu-label.on { color: var(--vfd-blue); text-shadow: 0 0 5px var(--vfd-blue); }
         
         .meter-container { flex: 1; height: 10px; background: #080808; display: flex; gap: 2px; padding: 1px; }
@@ -165,11 +164,7 @@
             max-width: 500px;
         }
         #art-image { width: 400px; height: 400px; object-fit: cover; border-radius: 4px; box-shadow: 0 0 20px #000; }
-        #art-info { 
-            color: var(--vfd-blue); margin-top: 20px; font-weight: bold; 
-            text-transform: uppercase; font-size: 14px; letter-spacing: 1px;
-            line-height: 1.5;
-        }
+        #art-info { color: var(--vfd-blue); margin-top: 20px; font-weight: bold; text-transform: uppercase; font-size: 14px; letter-spacing: 1px; line-height: 1.5; }
     </style>
 </head>
 <body>
@@ -279,7 +274,7 @@
         let playlist = [], currentIndex = 0;
         let currentArt = "technics_logo.png", currentMeta = "Technics - Audio Systems - Professional";
         let repeatMode = 0, isShuffle = false, timeMode = 0, isVUOn = true;
-        let pointA = null, pointB = null;
+        let pointA = null, pointB = null, isPeakSearching = false;
         let inputBuffer = "", inputTimeout = null, volDisplayTimeout = null;
         let audioCtx, analyzer, dataArray;
 
@@ -309,14 +304,57 @@
             }, 2000);
         }
 
-        // --- FONCTION VU-MÈTRE (ON/OFF) ---
+        // --- FONCTION PEAK SEARCH ---
+        document.getElementById('peak-btn').onclick = async () => {
+            if (!playlist.length || isPeakSearching) return;
+            isPeakSearching = true;
+            audio.pause();
+            
+            const timeLabel = document.getElementById('time-label');
+            const originalLabel = timeLabel.innerText;
+            timeLabel.innerText = "PEAK SEARCH";
+            document.getElementById('main-time-display').classList.add('vfd-input-blink');
+
+            let maxVal = 0;
+            let peakTime = 0;
+            const step = audio.duration / 50; // Analyse 50 points du morceau
+            
+            for(let i=0; i < 50; i++) {
+                audio.currentTime = i * step;
+                // Petit délai pour laisser l'analyseur capter la donnée
+                await new Promise(r => setTimeout(r, 40));
+                analyzer.getByteFrequencyData(dataArray);
+                let currentMax = Math.max(...dataArray);
+                if(currentMax > maxVal) {
+                    maxVal = currentMax;
+                    peakTime = audio.currentTime;
+                }
+            }
+
+            // Fin de recherche
+            audio.currentTime = peakTime;
+            document.getElementById('main-time-display').classList.remove('vfd-input-blink');
+            timeLabel.innerText = "PEAK FOUND";
+            
+            // Simuler l'affichage du peak sur le VU
+            const simulatedVal = Math.floor((maxVal / 255) * 40);
+            ['meter-L', 'meter-R'].forEach(id => {
+                const el = document.getElementById(id);
+                for (let i = 0; i < simulatedVal; i++) el.children[i].className = 'meter-segment' + (i > 34 ? ' on-red' : ' on-blue');
+            });
+
+            setTimeout(() => {
+                timeLabel.innerText = originalLabel;
+                isPeakSearching = false;
+                updateTimeDisplay();
+            }, 2000);
+        };
+
         document.getElementById('vu-btn').onclick = () => {
             isVUOn = !isVUOn;
             const labels = [document.getElementById('lbl-L'), document.getElementById('lbl-R')];
-            
             if (!isVUOn) {
-                // Éteindre tout
-                labels.forEach(l => l.className = 'vu-label'); // Sombre
+                labels.forEach(l => l.className = 'vu-label');
                 ['meter-L', 'meter-R'].forEach(id => {
                     const el = document.getElementById(id);
                     for (let i = 0; i < 40; i++) el.children[i].className = 'meter-segment';
@@ -326,7 +364,6 @@
             }
         };
 
-        // --- FONCTION A-B ---
         document.getElementById('ab-btn').onclick = () => {
             if (playlist.length === 0) return;
             const abVfd = document.getElementById('vfd-ab');
@@ -346,7 +383,6 @@
             }
         };
 
-        // --- POWER RESET ---
         document.getElementById('power-reset-btn').onclick = () => {
             audio.pause(); audio.src = ""; audio.volume = 0.02;
             document.getElementById('vol-knob').style.transform = `rotate(-110deg)`;
@@ -357,9 +393,8 @@
             showVolumeDisplay();
         };
 
-        // --- TRANSPORT ---
         document.getElementById('play-btn').onclick = () => {
-            if (!playlist.length) return;
+            if (!playlist.length || isPeakSearching) return;
             audio.paused ? audio.play() : audio.pause();
             document.getElementById('main-time-display').classList.toggle('vfd-blink-dim', audio.paused);
         };
@@ -398,7 +433,7 @@
         }
 
         function updateTimeDisplay() {
-            if(volDisplayTimeout) return; 
+            if(volDisplayTimeout || isPeakSearching) return; 
             let d = timeMode === 0 ? audio.currentTime : (audio.duration || 0) - audio.currentTime;
             const mins = Math.floor(d / 60).toString().padStart(2, '0');
             const secs = Math.floor(d % 60).toString().padStart(2, '0');
@@ -459,10 +494,6 @@
                         let b64 = ""; for(let i=0; i<p.data.length; i++) b64 += String.fromCharCode(p.data[i]);
                         currentArt = `data:${p.format};base64,${window.btoa(b64)}`;
                     } else { currentArt = "technics_logo.png"; }
-                },
-                onError: () => {
-                    currentMeta = `Unknown - Unknown - ${file.name}`;
-                    currentArt = "technics_logo.png";
                 }
             });
         }
@@ -501,7 +532,7 @@
 
         function renderVU() {
             requestAnimationFrame(renderVU);
-            if (!analyzer || !isVUOn) return;
+            if (!analyzer || !isVUOn || isPeakSearching) return;
             analyzer.getByteFrequencyData(dataArray);
             ['meter-L', 'meter-R'].forEach((id, idx) => {
                 const el = document.getElementById(id);
