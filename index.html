@@ -275,7 +275,7 @@
         let isShuffle = false, repeatMode = 0, timeMode = 0; 
         let volTimer = null, pointA = null, pointB = null, isVUOn = true;
         let inputBuffer = "", inputTimer = null;
-        let jogRotation = 0, isPeaking = false;
+        let jogRotation = 0, isPeaking = false, isStopped = true;
 
         const gridWrapper = document.getElementById('grid-numbers-wrapper');
         for(let i=1; i<=20; i++) {
@@ -385,7 +385,7 @@
         document.getElementById('power-reset-btn').onclick = () => {
             audio.pause(); audio.src = ""; playlist = []; currentIndex = 0;
             currentVol = 2; inputBuffer = ""; pointA = null; pointB = null; 
-            isShuffle = false; repeatMode = 0; timeMode = 0;
+            isShuffle = false; repeatMode = 0; timeMode = 0; isStopped = true;
             document.getElementById('file-input').value = "";
             document.querySelectorAll('.vfd-indicator').forEach(el => el.classList.remove('active', 'vfd-blink-blue'));
             document.getElementById('main-time-display').classList.remove('vfd-blink-dim');
@@ -433,42 +433,38 @@
         document.getElementById('time-btn').onclick = () => { 
             timeMode = (timeMode + 1) % 3; 
             applyPrefs(); 
-            // Forcer la mise à jour immédiate de l'affichage
             audio.dispatchEvent(new Event('timeupdate'));
         };
 
-        audio.onpause = () => { if(!isPeaking) document.getElementById('main-time-display').classList.add('vfd-blink-dim'); };
-        audio.onplay = () => document.getElementById('main-time-display').classList.remove('vfd-blink-dim');
+        audio.onpause = () => { 
+            if(!isPeaking && !isStopped) {
+                document.getElementById('main-time-display').classList.add('vfd-blink-dim'); 
+            }
+        };
+        
+        audio.onplay = () => {
+            isStopped = false;
+            document.getElementById('main-time-display').classList.remove('vfd-blink-dim');
+        };
 
-        // --- CORRECTION FONCTION TIME ---
         audio.ontimeupdate = () => {
             if (isPeaking || !playlist.length) return;
-            
             let displayTime = 0;
             const current = audio.currentTime;
             const duration = audio.duration || 0;
-
-            if (timeMode === 0) {
-                // Min : Sec (Temps écoulé)
-                displayTime = current;
-            } else if (timeMode === 1) {
-                // Remain (Temps restant sur la piste)
-                displayTime = Math.max(0, duration - current);
-            } else if (timeMode === 2) {
-                // Total Remain (Reste de la piste + pistes suivantes estimées à 3min)
+            if (timeMode === 0) displayTime = current;
+            else if (timeMode === 1) displayTime = Math.max(0, duration - current);
+            else if (timeMode === 2) {
                 let remainingTracks = playlist.length - 1 - currentIndex;
                 displayTime = Math.max(0, duration - current) + (remainingTracks * 180);
             }
-
             updateDig('m', displayTime / 60); 
             updateDig('s', displayTime % 60);
-
             if (pointA !== null && pointB !== null && current >= pointB) audio.currentTime = pointA;
         };
 
         let isVolActive = false, isJogActive = false;
         const volKnob = document.getElementById('vol-knob'), jogKnob = document.getElementById('jog-knob');
-        
         volKnob.onmouseenter = () => showVolumeOverlay();
         volKnob.onmousedown = () => isVolActive = true;
         jogKnob.onmousedown = () => isJogActive = true;
@@ -480,6 +476,7 @@
                 jogRotation += e.movementX;
                 jogKnob.style.transform = `rotate(${jogRotation}deg)`;
                 audio.currentTime += (e.movementX * 0.2);
+                isStopped = false;
             }
         };
 
@@ -514,16 +511,31 @@
 
         document.getElementById('file-input').onchange = (e) => {
             playlist = Array.from(e.target.files);
-            if(playlist.length) loadTrack(0);
+            if(playlist.length) {
+                isStopped = true;
+                loadTrack(0);
+            }
             document.getElementById('tray-front').classList.remove('open');
         };
 
         document.getElementById('eject-btn').onclick = () => document.getElementById('tray-front').classList.toggle('open');
-        document.getElementById('play-btn').onclick = () => { if(playlist.length) audio.paused ? audio.play() : audio.pause(); };
-        document.getElementById('stop-btn').onclick = () => { audio.pause(); audio.currentTime = 0; };
+        document.getElementById('play-btn').onclick = () => { 
+            if(playlist.length) {
+                if (audio.paused) { isStopped = false; audio.play(); }
+                else audio.pause();
+            }
+        };
+        
+        document.getElementById('stop-btn').onclick = () => { 
+            isStopped = true;
+            audio.pause(); 
+            audio.currentTime = 0; 
+            document.getElementById('main-time-display').classList.remove('vfd-blink-dim');
+        };
+        
         document.getElementById('prev-btn').onclick = () => loadTrack(currentIndex - 1);
-        document.getElementById('fwd-btn').onclick = () => { audio.currentTime += 5; };
-        document.getElementById('rew-btn').onclick = () => { audio.currentTime -= 5; };
+        document.getElementById('fwd-btn').onclick = () => { isStopped = false; audio.currentTime += 5; };
+        document.getElementById('rew-btn').onclick = () => { isStopped = false; audio.currentTime -= 5; };
 
         document.getElementById('lab-L').classList.add('active');
         document.getElementById('lab-R').classList.add('active');
