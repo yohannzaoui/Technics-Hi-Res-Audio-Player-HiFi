@@ -240,6 +240,10 @@
                 <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:10px;">
                     <button class="btn" id="rew-btn">◀◀ Search</button>
                     <button class="btn" id="fwd-btn">Search ▶▶</button>
+                    
+                    <button class="btn" id="minus-10-btn">- 10 s</button>
+                    <button class="btn" id="plus-10-btn">+ 10 s</button>
+                    
                     <button class="btn" id="shuffle-btn">Shuffle</button>
                     <button class="btn" id="repeat-btn">Repeat</button>
                     <button class="btn" id="ab-btn">A - B</button>
@@ -267,8 +271,7 @@
         audio.crossOrigin = "anonymous";
         let audioCtx, analyzer, dataArray, playlist = [], currentIndex = 0;
         
-        let currentVol = 2; // Volume à 2% par défaut
-        
+        let currentVol = 2; 
         let isShuffle = false, repeatMode = 0, timeMode = 0; 
         let volTimer = null, pointA = null, pointB = null, isVUOn = true;
         let inputBuffer = "", inputTimer = null;
@@ -380,17 +383,10 @@
         };
 
         document.getElementById('power-reset-btn').onclick = () => {
-            audio.pause(); 
-            audio.src = ""; 
-            playlist = []; 
-            currentIndex = 0;
-            currentVol = 2; // Réinitialisation à 2%
-            inputBuffer = ""; pointA = null; pointB = null; 
+            audio.pause(); audio.src = ""; playlist = []; currentIndex = 0;
+            currentVol = 2; inputBuffer = ""; pointA = null; pointB = null; 
             isShuffle = false; repeatMode = 0; timeMode = 0;
-            
-            // Correction pour permettre le rechargement immédiat des mêmes fichiers
             document.getElementById('file-input').value = "";
-            
             document.querySelectorAll('.vfd-indicator').forEach(el => el.classList.remove('active', 'vfd-blink-blue'));
             document.getElementById('main-time-display').classList.remove('vfd-blink-dim');
             applyPrefs(); 
@@ -399,6 +395,9 @@
             document.getElementById('tray-front').classList.remove('open');
             showVolumeOverlay();
         };
+
+        document.getElementById('minus-10-btn').onclick = () => { if(playlist.length) audio.currentTime = Math.max(0, audio.currentTime - 10); };
+        document.getElementById('plus-10-btn').onclick = () => { if(playlist.length) audio.currentTime = Math.min(audio.duration, audio.currentTime + 10); };
 
         document.getElementById('next-btn').onclick = () => {
             if (isShuffle && playlist.length > 1) {
@@ -431,20 +430,40 @@
             document.querySelectorAll('.vu-label').forEach(l => l.classList.toggle('active', isVUOn));
         };
 
-        document.getElementById('time-btn').onclick = () => { timeMode = (timeMode + 1) % 3; applyPrefs(); };
+        document.getElementById('time-btn').onclick = () => { 
+            timeMode = (timeMode + 1) % 3; 
+            applyPrefs(); 
+            // Forcer la mise à jour immédiate de l'affichage
+            audio.dispatchEvent(new Event('timeupdate'));
+        };
+
         audio.onpause = () => { if(!isPeaking) document.getElementById('main-time-display').classList.add('vfd-blink-dim'); };
         audio.onplay = () => document.getElementById('main-time-display').classList.remove('vfd-blink-dim');
 
+        // --- CORRECTION FONCTION TIME ---
         audio.ontimeupdate = () => {
-            if (isPeaking) return;
-            let t = audio.currentTime;
-            if (timeMode === 1) t = Math.max(0, audio.duration - audio.currentTime);
-            else if (timeMode === 2) {
-                let rem = playlist.length - 1 - currentIndex;
-                t = Math.max(0, audio.duration - audio.currentTime) + (rem * 180);
+            if (isPeaking || !playlist.length) return;
+            
+            let displayTime = 0;
+            const current = audio.currentTime;
+            const duration = audio.duration || 0;
+
+            if (timeMode === 0) {
+                // Min : Sec (Temps écoulé)
+                displayTime = current;
+            } else if (timeMode === 1) {
+                // Remain (Temps restant sur la piste)
+                displayTime = Math.max(0, duration - current);
+            } else if (timeMode === 2) {
+                // Total Remain (Reste de la piste + pistes suivantes estimées à 3min)
+                let remainingTracks = playlist.length - 1 - currentIndex;
+                displayTime = Math.max(0, duration - current) + (remainingTracks * 180);
             }
-            updateDig('m', t / 60); updateDig('s', t % 60);
-            if (pointA !== null && pointB !== null && audio.currentTime >= pointB) audio.currentTime = pointA;
+
+            updateDig('m', displayTime / 60); 
+            updateDig('s', displayTime % 60);
+
+            if (pointA !== null && pointB !== null && current >= pointB) audio.currentTime = pointA;
         };
 
         let isVolActive = false, isJogActive = false;
