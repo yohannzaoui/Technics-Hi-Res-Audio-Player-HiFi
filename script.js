@@ -250,6 +250,21 @@ function updateGrid() {
     }
 }
 
+// Media Session API for Chrome/Edge
+function updateMediaSession() {
+    if ('mediaSession' in navigator && playlist.length > 0) {
+        const currentFile = playlist[currentIndex];
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: currentFile.name.replace(/\.[^/.]+$/, ""),
+            artist: "Technics SL-PS740A",
+            album: "Compact Disc Digital Audio",
+            artwork: [
+                { src: currentArt, sizes: '512x512', type: 'image/png' }
+            ]
+        });
+    }
+}
+
 function loadTrack(idx) {
     if (!playlist.length) return;
     if (isRandom && idx !== currentIndex) {
@@ -258,9 +273,20 @@ function loadTrack(idx) {
     currentIndex = (idx + playlist.length) % playlist.length;
     audio.src = URL.createObjectURL(playlist[currentIndex]);
     updateDig('t', currentIndex + 1);
-    updateGrid(); audio.play();
+    updateGrid(); 
+    audio.play();
+    updateMediaSession(); // Sync with Browser Controls
     document.getElementById('main-time-display').classList.remove('vfd-blink-pause'); 
-    setupAudio(); extractMetadata(playlist[currentIndex]);
+    setupAudio(); 
+    extractMetadata(playlist[currentIndex]);
+}
+
+if ('mediaSession' in navigator) {
+    navigator.mediaSession.setActionHandler('play', () => document.getElementById('play-btn').click());
+    navigator.mediaSession.setActionHandler('pause', () => document.getElementById('play-btn').click());
+    navigator.mediaSession.setActionHandler('previoustrack', () => loadTrack(currentIndex - 1));
+    navigator.mediaSession.setActionHandler('nexttrack', () => loadTrack(currentIndex + 1));
+    navigator.mediaSession.setActionHandler('stop', () => document.getElementById('stop-btn').click());
 }
 
 audio.onended = () => {
@@ -301,6 +327,7 @@ function extractMetadata(file) {
                 let b64 = ""; for(let i=0; i<p.data.length; i++) b64 += String.fromCharCode(p.data[i]);
                 currentArt = `data:${p.format};base64,${window.btoa(b64)}`;
             } else currentArt = "img/favicon.png";
+            updateMediaSession(); // Re-sync with actual tag metadata
         }
     });
 }
@@ -382,3 +409,11 @@ function renderVU() {
 });
 
 audio.volume = 0.02;
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('PWA Service Worker Registered'))
+            .catch(err => console.log('Service Worker Error', err));
+    });
+}
