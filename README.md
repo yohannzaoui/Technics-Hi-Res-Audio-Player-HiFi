@@ -1,2 +1,2 @@
-# Audio Player with CD player functions
-# https://github.com/yohannzaoui/AudioPlayer/tree/Technics-SL-PS740A
+# Audio Player with Technics CD player functions
+# https://github.com/yohannzaoui/Technics-SL-PS740A/tree/Technics-SL-PS740A-V2
