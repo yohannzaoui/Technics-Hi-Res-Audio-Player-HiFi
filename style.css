@@ -103,7 +103,7 @@ body {
 .time-separator { width: 15px; text-align: center; font-size: 40px; margin: 0 2px; }
 
 .label-vfd { 
-    font-size: 11px; color: var(--vfd-blue-dim); font-family: var(--ui-font); 
+    font-size: 11px; color: var(--vfd-blue); font-family: var(--ui-font); 
     font-weight: bold; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 2px;
 }
 .label-vfd.clickable { cursor: pointer; color: var(--vfd-blue); transition: color 0.2s; }
