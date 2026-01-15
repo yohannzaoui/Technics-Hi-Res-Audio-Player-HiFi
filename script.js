@@ -112,10 +112,22 @@ document.getElementById('vu-btn').onclick = () => {
 document.getElementById('ab-btn').onclick = () => {
     if (playlist.length === 0) return;
     const abVfd = document.getElementById('vfd-ab');
-    if (pointA === null) { pointA = audio.currentTime; abVfd.classList.add('active', 'vfd-input-blink'); }
+    if (pointA === null) { 
+        pointA = audio.currentTime; 
+        abVfd.classList.add('active', 'vfd-input-blink'); 
+    }
     else if (pointB === null) {
-        if (audio.currentTime > pointA) { pointB = audio.currentTime; abVfd.classList.remove('vfd-input-blink'); abVfd.classList.add('active'); audio.currentTime = pointA; }
-    } else { pointA = null; pointB = null; abVfd.classList.remove('active', 'vfd-input-blink'); }
+        if (audio.currentTime > pointA) { 
+            pointB = audio.currentTime; 
+            abVfd.classList.remove('vfd-input-blink'); 
+            abVfd.classList.add('active'); 
+            audio.currentTime = pointA; 
+        }
+    } else { 
+        pointA = null; 
+        pointB = null; 
+        abVfd.classList.remove('active', 'vfd-input-blink'); 
+    }
 };
 
 document.getElementById('power-reset-btn').onclick = () => {
@@ -130,13 +142,20 @@ document.getElementById('power-reset-btn').onclick = () => {
 
 document.getElementById('play-btn').onclick = () => {
     if (!playlist.length || isPeakSearching) return;
-    audio.paused ? audio.play() : audio.pause();
-    document.getElementById('main-time-display').classList.toggle('vfd-blink-dim', audio.paused);
+    const timeDisplay = document.getElementById('main-time-display');
+    if (audio.paused) {
+        audio.play();
+        timeDisplay.classList.remove('vfd-blink-pause');
+    } else {
+        audio.pause();
+        timeDisplay.classList.add('vfd-blink-pause');
+    }
 };
 
 document.getElementById('stop-btn').onclick = () => { 
-    audio.pause(); audio.currentTime = 0; 
-    document.getElementById('main-time-display').classList.remove('vfd-blink-dim'); 
+    audio.pause(); 
+    audio.currentTime = 0; 
+    document.getElementById('main-time-display').classList.remove('vfd-blink-pause'); 
     updateTimeDisplay();
 };
 
@@ -177,7 +196,9 @@ function updateTimeDisplay() {
 }
 
 function updateGrid() {
+    // Condition : Playlist STRICTEMENT supérieure à 20 pour afficher la flèche rouge
     document.getElementById('over-arrow').classList.toggle('active', playlist.length > 20);
+    
     for(let i=1; i<=20; i++) {
         const el = document.getElementById(`gn-${i}`);
         el.classList.toggle('loaded', i <= playlist.length);
@@ -194,7 +215,7 @@ function loadTrack(idx) {
     audio.src = URL.createObjectURL(playlist[currentIndex]);
     updateDig('t', currentIndex + 1);
     updateGrid(); audio.play();
-    document.getElementById('main-time-display').classList.remove('vfd-blink-dim'); 
+    document.getElementById('main-time-display').classList.remove('vfd-blink-pause'); 
     setupAudio(); extractMetadata(playlist[currentIndex]);
 }
 
@@ -212,14 +233,14 @@ function handleNumKey(num) {
     if (!playlist.length) return;
     clearTimeout(inputTimeout);
     inputBuffer += num;
-    document.getElementById('track-vfd-box').classList.add('vfd-input-blink');
+    document.getElementById('t-d1').parentElement.classList.add('vfd-input-blink');
     updateDig('t', parseInt(inputBuffer));
     if (inputBuffer.length >= 2) executeJump();
     else inputTimeout = setTimeout(() => { executeJump(); }, 2000);
 }
 
 function executeJump() {
-    document.getElementById('track-vfd-box').classList.remove('vfd-input-blink');
+    document.getElementById('t-d1').parentElement.classList.remove('vfd-input-blink');
     let trackNum = parseInt(inputBuffer);
     if (!isNaN(trackNum) && trackNum > 0 && trackNum <= playlist.length) loadTrack(trackNum - 1);
     else updateDig('t', currentIndex + 1);
