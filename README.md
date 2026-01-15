@@ -71,5 +71,4 @@ This digital interface is a high-fidelity recreation of the legendary **Technics
 ### Preferences
 
 * Your **Language (English)** and **Theme (Dark Mode)** preferences are automatically saved in your browser. They will remain the same when you close and reopen the application.
-
 ---
