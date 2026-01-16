@@ -3,7 +3,7 @@ const ASSETS = [
   './',
   './index.html',
   './img/Technics_logo.png',
-  './img/favicon_512.png'
+  './img/favicon.png'
 ];
 
 self.addEventListener('install', (e) => {
