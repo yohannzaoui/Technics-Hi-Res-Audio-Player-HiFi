@@ -35,7 +35,7 @@ body {
     margin-bottom: 25px; padding-bottom: 12px; border-bottom: 0px solid #222;
 }
 
-.main-logo { height: 20px; display: block; opacity: 10; }
+.main-logo { height: 20px; display: block; opacity: 10; margin-left: -50px;}
 .model-name { font-size: 12px; color: var(--text-silver); letter-spacing: 3px; font-weight: bold; text-transform: uppercase; }
 
 .tray-outer-slot {
@@ -71,16 +71,21 @@ body {
 }
 .mash-logo-tray { height: 35px; opacity:2; filter: grayscale(1) brightness(1,5); }
 
-.power-section, .eject-section {
-    display: flex; flex-direction: column; align-items: center; gap: 10px;
+.power-section {
+    display: flex; flex-direction: column; align-items: center; gap: 10px; font: center; ;
 }
+
+.eject-section {
+    display: flex; flex-direction: column; align-items: center; gap: 10px; font: center;
+}
+
 
 .transport-grid { 
     display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; 
     margin-top: 55px; width: 100%; align-items: end; 
 }
 
-.eject-section { margin-top:-15px; }
+.eject-section { margin-top:-5px; }
 
 .upper-label, .knob-label {
     font-size: 9px; font-weight: bold; color: var(--text-silver);
@@ -135,10 +140,10 @@ body {
 .meter-segment.on-blue { background: var(--vfd-blue); box-shadow: 0 0 5px var(--vfd-blue); }
 .meter-segment.on-red { background: var(--vfd-red); box-shadow: 0 0 5px var(--vfd-red); }
 
-.main-interface { display: grid; grid-template-columns: 120px 1fr 340px; gap: 40px; align-items: start; }
+.main-interface { display: grid; grid-template-columns: 120px 1fr 340px; gap: 40px; align-items: start; margin-left: -60px; }
 .btn { 
     background: linear-gradient(145deg, #C0C0C0, #a8a8a8); border: 1px solid #808080; 
-    color: var(--text-silver); cursor: pointer; font-size: 11px; font-weight: bold; 
+    color: var(--text-silver); cursor: pointer; font-size: 10px; font-weight: bold; 
     box-shadow: 3px 3px 6px #838383; text-transform: uppercase; height: 50px; width: 100%;
     padding: 0 5px; text-align: center;
     display: flex; align-items: center; justify-content: center;
@@ -147,7 +152,7 @@ body {
 #power-reset-btn { height: 50px; width: 90px; }
 #stop-btn, #eject-btn { font-size: 24px; color: var(--text-silver); }
 
-.numeric-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px; margin-top: 25px; width: 100%; }
+.numeric-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 30px; margin-top: 25px; width: 100%; }
 
 /*.knob-container { text-align: center; }
 .knob { 
@@ -213,4 +218,39 @@ body {
     align-self: flex-end;
     padding-bottom: 8px;
     letter-spacing: 1px;
+}
+
+/* On crée une règle spécifique pour les boutons de la grille numérique */
+.numeric-grid .btn {
+    height: 50px;      /* On réduit la hauteur ici */
+    font-size: 13px;   /* Taille du texte */
+    margin-bottom: 5px; 
+}
+
+
+/* Ciblage spécifique de la rangée de transport (Play, Stop, Next, etc.) */
+.transport-grid .btn {
+    height: 60px;       /* Réduit la hauteur (était 50px) */
+    width: 180px;
+    font-size: 10px;    /* Réduit la taille des icônes/texte pour que ça rentre */
+    padding: 0;         /* Enlève les marges internes pour gagner de la place */
+}
+
+/* Optionnel : Ajuster l'espace entre le label (ex: PLAY/PAUSE) et le bouton */
+.transport-grid .eject-section {
+    gap: 5px;           /* Espace entre le texte au-dessus et le bouton */
+}
+
+/* Ciblage des boutons de la pile de droite (Random, Repeat, Peak, etc.) */
+.controls-right-stack .btn {
+    height: 70px;       /* Réduit la hauteur (originale 50px) */
+    width: 190px;
+    font-size: 10px;    /* Ajuste la taille du texte pour les mots longs comme "Random" */
+    padding: 10px;       /* Donne un peu d'espace interne */
+}
+
+/* Ajustement spécifique pour les boutons de volume en bas à droite */
+#vol-down-btn, #mute-btn, #vol-up-btn {
+    height: 35px;       /* On aligne la hauteur sur les autres */
+    width: 0px;
 }
