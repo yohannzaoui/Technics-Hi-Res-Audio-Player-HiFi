@@ -673,3 +673,93 @@ body {
     /* Ajout d'une légère brillance sur toute la surface pour l'effet "vitre" */
     background-color: rgba(255, 255, 255, 0.01);
 }
+
+
+
+.vu-hatch-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 25px;
+}
+
+/* On ajuste aussi le cadre pour que l'intégration soit propre */
+.vu-hatch-frame {
+    width: 200px; 
+    height: 55px;
+    background: #1a1a1b; /* Fond noir profond derrière le cache */
+    border: 2px solid #000; /* Bordure extérieure du cadre */
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+    margin-top: 5px;
+}
+
+#vu-hatch-block {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, #1a1a1b 0%, #151516 100%); /* Même dégradé que le tiroir */
+    
+    /* COPIE EXACTE DES BORDURES DU TIROIR CD */
+    border: 2px solid #000;      /* Trace les 4 côtés */
+    border-top-color: #333;      /* Petit reflet de relief en haut */
+    box-sizing: border-box;      /* Garde les bordures incluses dans la taille */
+    
+    z-index: 20;
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hatch-logo {
+    font-size: 10px;
+    color: #444;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+/* État ouvert : le cache descend de 100% de sa hauteur */
+#vu-hatch-block.hatch-open {
+    transform: translateY(100%);
+}
+
+#vu-hatch-block.hatch-closed {
+    transform: translateY(0);
+}
+
+/* On s'assure que les boutons sont bien centrés derrière */
+.vu-controls-container {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+.hatch-texture {
+    width: 100%;
+    height: 100%;
+    /* Un dégradé très fin pour simuler l'aluminium brossé */
+    background: linear-gradient(180deg, 
+        rgba(255,255,255,0.03) 0%, 
+        transparent 50%, 
+        rgba(0,0,0,0.1) 100%);
+}
+
+.upper-label {
+    display: block;        /* Permet d'appliquer des marges correctement */
+    margin-top: 5px;      /* Ajuste cette valeur pour descendre le mot plus ou moins bas */
+    margin-bottom: 3px;    /* Espace entre le mot et la trappe */
+    transition: all 0.3s;  /* Optionnel : pour un mouvement fluide si tu le modifies */
+    text-align: center;
+}
+
+.vu-sense-group {
+    display: block;        /* Permet d'appliquer des marges correctement */
+    margin-top: 5px;      /* Ajuste cette valeur pour descendre le mot plus ou moins bas */
+    margin-bottom: -10px;    /* Espace entre le mot et la trappe */
+    transition: all 0.3s;  /* Optionnel : pour un mouvement fluide si tu le modifies */
+}

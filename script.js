@@ -483,3 +483,14 @@ function startVUTimeout() {
     volDisplayTimeout = setTimeout(hideVolumeDisplay, 1500);
 }
 
+function toggleVUHatch() {
+    const hatch = document.getElementById('vu-hatch-block');
+    if (hatch.classList.contains('hatch-closed')) {
+        hatch.classList.remove('hatch-closed');
+        hatch.classList.add('hatch-open');
+    } else {
+        hatch.classList.remove('hatch-open');
+        hatch.classList.add('hatch-closed');
+    }
+}
+
