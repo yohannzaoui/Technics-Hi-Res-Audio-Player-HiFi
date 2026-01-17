@@ -47,10 +47,11 @@ body {
 }
 
 .main-logo { 
-    height: 20px; 
+    height: 23px; 
     display: block; 
-    margin-left: -70px
+    margin-left: -70px;
 }
+
 
 .model-name { 
     font-size: 12px; 
