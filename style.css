@@ -124,7 +124,7 @@ body {
 }
 
 .eject-section { 
-    margin-top:-15px; 
+    margin-top:20px; 
 }
 
 .upper-label, .volume-label {
@@ -536,4 +536,304 @@ body {
 .volume-label {
     display: block; /* S'assure que l'élément peut être déplacé */
     transform: translateY(15px); /* Descend le mot de 15px vers le bas */
+}
+
+.label-tiny {
+    position: absolute;
+    top: -15px;
+    font-size: 9px;
+    color: #555;
+}
+
+.vu-sense-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px; /* Espace sous le bloc volume */
+}
+
+.vu-controls-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* On force la taille identique au volume */
+#vu-down-btn, #vu-up-btn {
+    width: 90px !important;
+    height: 40px !important;
+    min-width: 0 !important;
+    flex: none !important;
+    margin-bottom: 20px;
+}
+
+/* Style optionnel pour le label (comme tu as demandé précédemment) */
+.vu-sense-group .upper-label {
+    font-size: 10px;
+    letter-spacing: 1px;
+    /* background-color: #222; (Si tu veux un fond de couleur) */
+}
+
+#over-arrow {
+    color: #220000; /* Couleur éteinte (rouge très sombre) */
+    transition: all 0.3s;
+}
+
+#over-arrow.active {
+    color: #ff0000 !important; /* Rouge vif */
+    text-shadow: 0 0 8px rgba(255, 0, 0, 0.8); /* Effet néon/VFD */
+}
+
+
+/* --- REFLET VERTICAL HAUT EN BAS --- */
+
+.display-panel {
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.display-panel::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    
+    /* Dégradé de 180deg pour aller de haut en bas */
+    /* On crée une bande claire en haut qui s'estompe rapidement */
+    background: linear-gradient(
+        180deg, 
+        rgba(255, 255, 255, 0.15) 0%,   /* Éclat maximal au bord supérieur */
+        rgba(255, 255, 255, 0.05) 15%,  /* Dégradé rapide */
+        transparent 50%,                /* Zone sombre au milieu pour la lisibilité */
+        rgba(255, 255, 255, 0.02) 80%,  /* Très léger reflet de surface en bas */
+        rgba(255, 255, 255, 0.07) 100%  /* Petit liseré de lumière sur le bord bas */
+    );
+    
+    z-index: 999; 
+    pointer-events: none;
+    
+    /* Ajout d'une légère brillance sur toute la surface pour l'effet "vitre" */
+    background-color: rgba(255, 255, 255, 0.01);
+}
+
+
+
+.vu-hatch-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 25px;
+}
+
+/* On ajuste aussi le cadre pour que l'intégration soit propre */
+.vu-hatch-frame {
+    width: 270px; 
+    height: 55px;
+    background: #070707; /* Fond noir profond derrière le cache */
+    border: 2px solid #000; /* Bordure extérieure du cadre */
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+    margin-top: 5px;
+}
+
+#vu-hatch-block {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, #1a1a1b 0%, #151516 100%); /* Même dégradé que le tiroir */
+    
+    /* COPIE EXACTE DES BORDURES DU TIROIR CD */
+    border: 2px solid #000;      /* Trace les 4 côtés */
+    border-top-color: #333;      /* Petit reflet de relief en haut */
+    box-sizing: border-box;      /* Garde les bordures incluses dans la taille */
+    
+    z-index: 20;
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hatch-logo {
+    font-size: 10px;
+    color: #444;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+/* État ouvert : le cache descend de 100% de sa hauteur */
+#vu-hatch-block.hatch-open {
+    transform: translateY(95%);
+}
+
+#vu-hatch-block.hatch-closed {
+    transform: translateY(0);
+}
+
+/* On s'assure que les boutons sont bien centrés derrière */
+.vu-controls-container {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+.hatch-texture {
+    width: 100%;
+    height: 100%;
+    /* Un dégradé très fin pour simuler l'aluminium brossé */
+    background: linear-gradient(180deg, 
+        rgba(255,255,255,0.03) 0%, 
+        transparent 50%, 
+        rgba(0,0,0,0.1) 100%);
+}
+
+.upper-label {
+    display: block;        /* Permet d'appliquer des marges correctement */
+    margin-top: 5px;      /* Ajuste cette valeur pour descendre le mot plus ou moins bas */
+    margin-bottom: 3px;    /* Espace entre le mot et la trappe */
+    transition: all 0.3s;  /* Optionnel : pour un mouvement fluide si tu le modifies */
+    text-align: center;
+}
+
+.vu-sense-group {
+    display: block;        /* Permet d'appliquer des marges correctement */
+    margin-top: 55px;      /* Ajuste cette valeur pour descendre le mot plus ou moins bas */
+    margin-bottom: -10px;    /* Espace entre le mot et la trappe */
+    transition: all 0.3s;  /* Optionnel : pour un mouvement fluide si tu le modifies */
+}
+
+.tone-controls-section {
+    width: 100%;
+    display: flex;
+    justify-content: center; /* Centre horizontalement */
+    align-items: center;
+
+    /* CONTRÔLE INDÉPENDANT DES MARGES */
+    margin-top: 10px;    /* Ajuste l'espace avec ce qui est AU-DESSUS */
+    margin-bottom: -60px; /* Ajuste l'espace avec la rangée EJECT en DESSOUS */
+    
+    /* Optionnel : si tu veux voir la zone pendant que tu règles */
+    /* border: 1px dashed rgba(255,255,255,0.1); */
+}
+
+/* Aligne les deux groupes Bass et Treble sur une ligne */
+.tone-controls-row {
+    display: flex;
+    gap: 60px; /* Espace généreux entre Bass et Treble pour la clarté */
+}
+
+/* Centre le texte au-dessus des boutons */
+.tone-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px; /* Espace entre le mot et les boutons */
+}
+
+.tone-group-wrapper .upper-label {
+    display: block !important; /* Force l'élément à se comporter comme un bloc */
+    position: relative !important; /* Permet d'utiliser top/bottom */
+    top: 5px !important; /* Ajuste cette valeur : 20px pour descendre, -20px pour monter */
+    text-align: center;
+    width: 100%;
+}
+
+/* Style des boutons de tonalité */
+.btn-tone {
+    width: 90px !important;
+    height: 45px !important;
+    font-size: 11px !important;
+    min-width: 0 !important;
+    flex: none !important;
+}
+
+.btn-group {
+    display: flex;
+    gap: 10px;
+}
+
+
+.tone-group-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.tone-hatch-frame {
+    width: 580px; /* Un peu plus large pour contenir les 4 boutons */
+    height: 65px;
+    background: #0a0a0a;
+    border: 2px solid #000;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.9);
+    margin-top: 10px;
+}
+
+#tone-hatch-block {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, #1a1a1b 0%, #151516 100%);
+    border: 2px solid #000;
+    border-top-color: #333; /* Reflet identique au tiroir CD */
+    box-sizing: border-box;
+    z-index: 20;
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#tone-hatch-block.hatch-open {
+    transform: translateY(62px); /* Glisse vers le bas */
+}
+
+/* On ajuste l'alignement des boutons derrière la trappe */
+.tone-controls-row {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 100%;
+    padding: 0 10px;
+}
+
+.label-tiny {
+    font-size: 9px;
+    color: #555;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.hatch-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    
+    font-size: 10px;
+    letter-spacing: 1px;
+    font-weight: bold;
+    
+    color: #9aa0a5;
+    text-shadow:
+        0 1px 0 #000,
+        0 0 4px rgba(120, 160, 180, 0.25);
+
+    pointer-events: none;
+    user-select: none;
+    opacity: 0.9;
+}
+
+/* Quand la trappe est ouverte, on masque le texte */
+.hatch-open .hatch-label {
+    transition: all 0.6s ease-in-out;
 }

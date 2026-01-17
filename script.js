@@ -9,6 +9,10 @@ let audioCtx, analyzer, dataArray, searchInterval = null;
 let preMuteVolume = 0.02;
 let isMuted = false;
 let volRepeatInterval = null;
+let vuMultiplier = 1.2;
+let bassFilter, trebleFilter;
+let bassLevel = 0;   
+let trebleLevel = 0;
 
 const gridWrapper = document.getElementById('grid-numbers-wrapper');
 for(let i=1; i<=20; i++) {
@@ -174,14 +178,16 @@ document.getElementById('vu-btn').onclick = () => {
     } else labels.forEach(l => l.className = 'vu-label on');
 };
 
+
+// Appelle cette fonction à chaque clic A/B
 document.getElementById('ab-btn').onclick = () => {
     if (playlist.length === 0) return;
     const abVfd = document.getElementById('vfd-ab');
+
     if (pointA === null) { 
         pointA = audio.currentTime; 
         abVfd.classList.add('active', 'vfd-input-blink'); 
-    }
-    else if (pointB === null) {
+    } else if (pointB === null) {
         if (audio.currentTime > pointA) { 
             pointB = audio.currentTime; 
             abVfd.classList.remove('vfd-input-blink'); 
@@ -193,6 +199,8 @@ document.getElementById('ab-btn').onclick = () => {
         pointB = null; 
         abVfd.classList.remove('active', 'vfd-input-blink'); 
     }
+
+    renderABLoop(); // met à jour la barre
 };
 
 document.getElementById('power-reset-btn').onclick = () => {
@@ -232,7 +240,8 @@ function updateDig(prefix, val) {
 
 function updateTimeDisplay() {
     const timeLabel = document.getElementById('time-label');
-    if(timeLabel.innerText === "VOLUME" || timeLabel.innerText === "MUTE" || isPeakSearching) return; 
+    if(timeLabel.innerText === "VOLUME" || timeLabel.innerText === "MUTE" || timeLabel.innerText === "VU SENSE" || timeLabel.innerText === "BASS" || 
+       timeLabel.innerText === "TREBLE" ||isPeakSearching) return; 
     let d = timeMode === 0 ? audio.currentTime : (audio.duration || 0) - audio.currentTime;
     const mins = Math.floor(d / 60).toString().padStart(2, '0'), secs = Math.floor(d % 60).toString().padStart(2, '0');
     document.getElementById('m-d1').innerText = mins[mins.length-2] || "0";
@@ -242,11 +251,21 @@ function updateTimeDisplay() {
 }
 
 function updateGrid() {
-    document.getElementById('over-arrow').classList.toggle('active', playlist.length > 20);
+    // On vérifie si la playlist dépasse 20
+    const hasOver20 = playlist.length > 20;
+    const overArrow = document.getElementById('over-arrow');
+    
+    if (overArrow) {
+        overArrow.classList.toggle('active', hasOver20);
+    }
+
+    // Mise à jour des petits numéros (1-20)
     for(let i=1; i<=20; i++) {
         const el = document.getElementById(`gn-${i}`);
-        el.classList.toggle('loaded', i <= playlist.length);
-        el.classList.toggle('active-track', i === currentIndex + 1 && playlist.length > 0);
+        if (el) {
+            el.classList.toggle('loaded', i <= playlist.length);
+            el.classList.toggle('active-track', i === currentIndex + 1 && playlist.length > 0);
+        }
     }
 }
 
@@ -359,7 +378,11 @@ function openPlaylist() {
 
 document.getElementById('file-input').onchange = (e) => { 
     playlist = Array.from(e.target.files); 
-    if(playlist.length) { document.getElementById('tray-front').classList.remove('open'); loadTrack(0); }
+    if(playlist.length) { 
+        document.getElementById('tray-front').classList.remove('open'); 
+        loadTrack(0); 
+        updateGrid(); // <--- AJOUTE CETTE LIGNE ICI
+    }
 };
 
 document.getElementById('next-btn').onclick = () => loadTrack(currentIndex + 1);
@@ -389,12 +412,35 @@ function openArt() {
 }
 
 function setupAudio() {
-    if (audioCtx) return;
+    if (audioCtx && audioCtx.state === "suspended") {
+    audioCtx.resume();
+    return;
+}
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const src = audioCtx.createMediaElementSource(audio);
-    analyzer = audioCtx.createAnalyser(); analyzer.fftSize = 64;
-    src.connect(analyzer); analyzer.connect(audioCtx.destination);
+    
+    // Création des filtres
+    bassFilter = audioCtx.createBiquadFilter();
+    bassFilter.type = "lowshelf";
+    bassFilter.frequency.value = 200;
+    bassFilter.gain.value = bassLevel;
+
+    trebleFilter = audioCtx.createBiquadFilter();
+    trebleFilter.type = "highshelf";
+    trebleFilter.frequency.value = 3000;
+    trebleFilter.gain.value = trebleLevel;
+
+    // Analyseur pour le VUMètre
+    analyzer = audioCtx.createAnalyser(); 
+    analyzer.fftSize = 64;
     dataArray = new Uint8Array(analyzer.frequencyBinCount);
+
+    // CHAÎNE DE CONNEXION : Source -> Bass -> Treble -> Analyser -> Sortie
+    src.connect(bassFilter);
+    bassFilter.connect(trebleFilter);
+    trebleFilter.connect(analyzer);
+    analyzer.connect(audioCtx.destination);
+
     renderVU();
 }
 
@@ -402,10 +448,19 @@ function renderVU() {
     requestAnimationFrame(renderVU);
     if (!analyzer || !isVUOn || isPeakSearching) return;
     analyzer.getByteFrequencyData(dataArray);
+
     ['meter-L', 'meter-R'].forEach((id, idx) => {
         const el = document.getElementById(id);
-        const val = Math.floor((dataArray[idx + 2] / 255) * 40);
-        for (let i = 0; i < 40; i++) el.children[i].className = 'meter-segment' + (i < val ? (i > 34 ? ' on-red' : ' on-blue') : '');
+        
+        // --- MODIFICATION ICI ---
+        // On multiplie la donnée brute par vuMultiplier avant de calculer le nombre de segments
+        let rawVal = dataArray[idx + 2] * vuMultiplier; 
+        const val = Math.floor((rawVal / 255) * 40);
+        // -------------------------
+
+        for (let i = 0; i < 40; i++) {
+            el.children[i].className = 'meter-segment' + (i < val ? (i > 34 ? ' on-red' : ' on-blue') : '');
+        }
     });
 }
 
@@ -424,3 +479,100 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+
+// Affiche la sensibilité au survol
+function showVUSense() {
+    if (volDisplayTimeout) clearTimeout(volDisplayTimeout);
+    
+    const timeLabel = document.getElementById('time-label');
+    const timeSep = document.getElementById('time-sep');
+    
+    timeLabel.innerText = "VU SENSE";
+    timeSep.style.opacity = "0";
+
+    // On prépare la valeur (ex: 1.2 -> 12)
+    let displayVal = Math.round(vuMultiplier * 10).toString().padStart(2, '0');
+    
+    document.getElementById('m-d1').innerText = " ";
+    document.getElementById('m-d2').innerText = " ";
+    document.getElementById('s-d1').innerText = displayVal[0];
+    document.getElementById('s-d2').innerText = displayVal[1];
+}
+
+// Modifie la valeur quand on clique (et met à jour l'affichage)
+function adjustVUSense(change) {
+    vuMultiplier += change;
+    if (vuMultiplier < 0.2) vuMultiplier = 0.2;
+    if (vuMultiplier > 8.0) vuMultiplier = 8.0;
+    
+    showVUSense(); // Met à jour les chiffres immédiatement
+}
+
+// Lance le délai de 1.5s quand la souris quitte le bouton
+function startVUTimeout() {
+    if (volDisplayTimeout) clearTimeout(volDisplayTimeout);
+    volDisplayTimeout = setTimeout(hideVolumeDisplay, 1500);
+}
+
+function toggleVUHatch() {
+    const hatch = document.getElementById('vu-hatch-block');
+    if (hatch.classList.contains('hatch-closed')) {
+        hatch.classList.remove('hatch-closed');
+        hatch.classList.add('hatch-open');
+    } else {
+        hatch.classList.remove('hatch-open');
+        hatch.classList.add('hatch-closed');
+    }
+}
+
+
+function adjustBass(change) {
+    // On limite entre -10 et +10 dB
+    bassLevel = Math.max(-10, Math.min(10, bassLevel + change));
+    if (bassFilter) {
+        bassFilter.gain.setTargetAtTime(bassLevel, audioCtx.currentTime, 0.01);
+    }
+    showToneDisplay("BASS", bassLevel);
+}
+
+function adjustTreble(change) {
+    trebleLevel = Math.max(-10, Math.min(10, trebleLevel + change));
+    if (trebleFilter) {
+        trebleFilter.gain.setTargetAtTime(trebleLevel, audioCtx.currentTime, 0.01);
+    }
+    showToneDisplay("TREBLE", trebleLevel);
+}
+
+function showToneDisplay(label, value) {
+    if (volDisplayTimeout) clearTimeout(volDisplayTimeout);
+    
+    const timeLabel = document.getElementById('time-label');
+    const timeSep = document.getElementById('time-sep');
+    
+    timeLabel.innerText = label;
+    timeSep.style.opacity = "0";
+
+    // Affichage du signe (+ ou -) et de la valeur
+    const sign = value >= 0 ? "+" : "-";
+    const valStr = Math.abs(value).toString().padStart(2, '0');
+    
+    document.getElementById('m-d1').innerText = sign;
+    document.getElementById('m-d2').innerText = " ";
+    document.getElementById('s-d1').innerText = valStr[0];
+    document.getElementById('s-d2').innerText = valStr[1];
+
+    // Retour à l'affichage normal après 1.5s
+    volDisplayTimeout = setTimeout(hideVolumeDisplay, 1500);
+}
+
+// Lance le délai de 1.5s quand la souris quitte les boutons Tone
+function startToneTimeout() {
+    if (volDisplayTimeout) clearTimeout(volDisplayTimeout);
+    volDisplayTimeout = setTimeout(hideVolumeDisplay, 1500);
+}
+
+
+function toggleToneHatch() {
+    const hatch = document.getElementById('tone-hatch-block');
+    hatch.classList.toggle('hatch-open');
+}
