@@ -106,33 +106,43 @@
 
 
 
-           <div class="tone-controls-section">
-    <div class="tone-controls-row">
-        <div class="tone-group">
-            <span class="upper-label">BASS</span>
-            <div class="btn-group">
-                <button class="btn btn-tone" 
-                    onmouseenter="showToneDisplay('BASS', bassLevel)" 
-                    onmouseleave="startToneTimeout()" 
-                    onclick="adjustBass(-2)">-</button>
-                <button class="btn btn-tone" 
-                    onmouseenter="showToneDisplay('BASS', bassLevel)" 
-                    onmouseleave="startToneTimeout()" 
-                    onclick="adjustBass(2)">+</button>
+       <div class="tone-controls-section">
+    <div class="tone-group-wrapper">
+        <span class="upper-label">TONE CONTROL</span>
+        
+        <div class="tone-hatch-frame" onclick="toggleToneHatch()">
+            <div id="tone-hatch-block" class="hatch-closed">
+                <div class="hatch-texture"></div>
             </div>
-        </div>
+            
+            <div class="tone-controls-row">
+                <div class="tone-group">
+                    <span class="label-tiny">BASS</span>
+                    <div class="btn-group">
+                        <button class="btn btn-tone" 
+                            onmouseenter="showToneDisplay('BASS', bassLevel)" 
+                            onmouseleave="startToneTimeout()" 
+                            onclick="event.stopPropagation(); adjustBass(-2)">Bass -</button>
+                        <button class="btn btn-tone" 
+                            onmouseenter="showToneDisplay('BASS', bassLevel)" 
+                            onmouseleave="startToneTimeout()" 
+                            onclick="event.stopPropagation(); adjustBass(2)">Bass +</button>
+                    </div>
+                </div>
 
-        <div class="tone-group">
-            <span class="upper-label">TREBLE</span>
-            <div class="btn-group">
-                <button class="btn btn-tone" 
-                    onmouseenter="showToneDisplay('TREBLE', trebleLevel)" 
-                    onmouseleave="startToneTimeout()" 
-                    onclick="adjustTreble(-2)">-</button>
-                <button class="btn btn-tone" 
-                    onmouseenter="showToneDisplay('TREBLE', trebleLevel)" 
-                    onmouseleave="startToneTimeout()" 
-                    onclick="adjustTreble(2)">+</button>
+                <div class="tone-group">
+                    <span class="label-tiny">TREBLE</span>
+                    <div class="btn-group">
+                        <button class="btn btn-tone" 
+                            onmouseenter="showToneDisplay('TREBLE', trebleLevel)" 
+                            onmouseleave="startToneTimeout()" 
+                            onclick="event.stopPropagation(); adjustTreble(-2)">Treble -</button>
+                        <button class="btn btn-tone" 
+                            onmouseenter="showToneDisplay('TREBLE', trebleLevel)" 
+                            onmouseleave="startToneTimeout()" 
+                            onclick="event.stopPropagation(); adjustTreble(2)">Trebel +</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -214,5 +224,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
-

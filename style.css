@@ -538,68 +538,12 @@ body {
     transform: translateY(15px); /* Descend le mot de 15px vers le bas */
 }
 
-/* Le cadre fixe sous le bouton Power */
-.power-hatch-container {
-    width: 60px;
-    height: 60px;
-    border: 2px solid #1a1a1a;
-    background: #0a0a0a; /* Fond creux */
-    margin-top: 20px;
-    position: relative;
-    overflow: hidden; /* Cache le bloc quand il sort du cadre */
-    cursor: pointer;
-    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.8);
-}
-
-/* Le bloc carré qui bouge */
-#power-hatch-block {
-    width: 180px !important;
-    height: 180px !important;
-    background: #1a1a1b; /* Couleur aluminium brossé sombre */
-    border: 1px solid #3d3d3d;
-    position: absolute;
-    top: 0;
-    left: 0;
-    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); /* Même fluidité que le CD */
-    box-sizing: border-box; /* C'est LA propriété qui répare le décalage */
-    border: 1px solid #444; /* Ta fine bordure */
-    width: 100%;            /* Maintenant le 100% inclut la bordure */
-    height: 100%;
-
-}
-
-/* Texture pour simuler le métal (optionnel) */
-.hatch-texture {
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 50%, rgba(0,0,0,0.2) 100%);
-}
-
-/* État ouvert : le bloc coulisse vers le bas */
-.hatch-open {
-    transform: translateY(55px); /* Ajuste selon si tu veux qu'il reste un bout visible */
-}
-
-/* État fermé : position d'origine */
-.hatch-closed {
-    transform: translateY(0);
-}
-
 .label-tiny {
     position: absolute;
     top: -15px;
     font-size: 9px;
     color: #555;
 }
-
-.power-hatch-container {
-    padding: 0 !important; /* On s'assure qu'aucun espace interne ne pousse le carré */
-    overflow: hidden;      /* Crucial pour que le coulissement soit propre */
-    flex: none; /* Empêche le parent Flexbox de modifier la taille du bloc */
-    align-self: center; /* Permet de le centrer horizontalement sans qu'il s'étale */
-}
-
-
 
 .vu-sense-group {
     display: flex;
@@ -688,7 +632,7 @@ body {
 .vu-hatch-frame {
     width: 200px; 
     height: 55px;
-    background: #1a1a1b; /* Fond noir profond derrière le cache */
+    background: #070707; /* Fond noir profond derrière le cache */
     border: 2px solid #000; /* Bordure extérieure du cadre */
     position: relative;
     overflow: hidden;
@@ -760,7 +704,7 @@ body {
 
 .vu-sense-group {
     display: block;        /* Permet d'appliquer des marges correctement */
-    margin-top: 25px;      /* Ajuste cette valeur pour descendre le mot plus ou moins bas */
+    margin-top: 55px;      /* Ajuste cette valeur pour descendre le mot plus ou moins bas */
     margin-bottom: -10px;    /* Espace entre le mot et la trappe */
     transition: all 0.3s;  /* Optionnel : pour un mouvement fluide si tu le modifies */
 }
@@ -804,7 +748,7 @@ body {
 .btn-tone {
     width: 90px !important;
     height: 45px !important;
-    font-size: 18px !important;
+    font-size: 11px !important;
     min-width: 0 !important;
     flex: none !important;
 }
@@ -812,4 +756,58 @@ body {
 .btn-group {
     display: flex;
     gap: 10px;
+}
+
+
+.tone-group-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.tone-hatch-frame {
+    width: 580px; /* Un peu plus large pour contenir les 4 boutons */
+    height: 65px;
+    background: #0a0a0a;
+    border: 2px solid #000;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.9);
+    margin-top: 10px;
+}
+
+#tone-hatch-block {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, #1a1a1b 0%, #151516 100%);
+    border: 2px solid #000;
+    border-top-color: #333; /* Reflet identique au tiroir CD */
+    box-sizing: border-box;
+    z-index: 20;
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#tone-hatch-block.hatch-open {
+    transform: translateY(62px); /* Glisse vers le bas */
+}
+
+/* On ajuste l'alignement des boutons derrière la trappe */
+.tone-controls-row {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 100%;
+    padding: 0 10px;
+}
+
+.label-tiny {
+    font-size: 9px;
+    color: #555;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }

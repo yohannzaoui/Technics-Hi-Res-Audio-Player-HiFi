@@ -564,3 +564,8 @@ function startToneTimeout() {
     volDisplayTimeout = setTimeout(hideVolumeDisplay, 1500);
 }
 
+
+function toggleToneHatch() {
+    const hatch = document.getElementById('tone-hatch-block');
+    hatch.classList.toggle('hatch-open');
+}
