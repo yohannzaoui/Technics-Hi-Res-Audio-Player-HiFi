@@ -90,7 +90,7 @@ function startVolRepeat(dir) {
     adjust(); 
 
     // Lance la répétition seulement si on laisse appuyé plus de 500ms
-    volRepeatInterval = setInterval(adjust, 100);
+    volRepeatInterval = setInterval(adjust, 150);
 }
 
 function stopVolRepeat() {
