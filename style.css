@@ -326,11 +326,11 @@ body {
     width: 100%;
 }
 
-/* Taille du logo CD réduite et position conservée */
-.cd-logo-bottom { 
+/* Taille du logo HR */
+.hr-logo-bottom { 
     position: absolute; 
     left: 50px; 
-    bottom: 40px; 
+    bottom: 65px; 
     height: 40px; 
     opacity: 0.7; 
     pointer-events: none; 

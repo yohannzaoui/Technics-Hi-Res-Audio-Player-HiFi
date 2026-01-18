@@ -1,7 +1,7 @@
 {
-  "short_name": "Technics SL-PS740A",
-  "name": "Technics SL-PS740A",
-  "description": "Technics Stereo Compact Disc Player SL-PS740A",
+  "short_name": "Technics Hi-Res Player",
+  "name": "Technics Hi-Res Player",
+  "description": "Technics High Resolution Audio Player",
   "icons": [
     {
       "src": "img/favicon.png",
