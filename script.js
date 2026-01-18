@@ -13,7 +13,7 @@ let vuMultiplier = 1.2;
 let bassFilter, trebleFilter;
 let bassLevel = 0;   
 let trebleLevel = 0;
-let volumeInt = 2;
+let volumeInt = 1;
 
 const gridWrapper = document.getElementById('grid-numbers-wrapper');
 for(let i=1; i<=20; i++) {
