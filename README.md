@@ -1,4 +1,4 @@
-# Technics SL-PS740A Digital Audio Player Emulator
+# Technics High Resolution Audio Player
 
 A high-fidelity web application emulating the aesthetics and user experience of the iconic **Technics SL-PS740A** CD player from the 1990s, featuring the MASH 1-bit DAC system.
 
