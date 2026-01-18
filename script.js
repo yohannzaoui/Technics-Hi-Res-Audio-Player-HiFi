@@ -36,7 +36,11 @@ function showVolumeDisplay() {
         document.getElementById('s-d2').innerText = "0";
     } else {
         timeLabel.innerText = "VOLUME";
-        let volPerc = Math.round(audio.volume * 99);
+        
+        // --- CORRECTION ICI : On arrondit à l'unité la plus proche ---
+        let volPerc = Math.round(audio.volume * 100); 
+        if (volPerc > 99) volPerc = 99; // Pour rester sur 2 chiffres max
+        
         const s = volPerc.toString().padStart(2, '0');
         document.getElementById('m-d1').innerText = " ";
         document.getElementById('m-d2').innerText = " ";
@@ -71,26 +75,18 @@ const muteBtn = document.getElementById('mute-btn');
 function startVolRepeat(dir) {
     stopVolRepeat();
     isMuted = false;
-    
     const adjust = () => {
-        // On récupère le volume actuel
-        let currentVol = audio.volume;
+        // On calcule le nouveau volume en restant sur des multiples de 0.01
+        let step = 0.01;
+        let newVol = dir === 1 ? audio.volume + step : audio.volume - step;
         
-        if (dir === 1) {
-            // Monte de 0.01 (soit 1 palier sur l'afficheur)
-            audio.volume = Math.min(1, Math.round((currentVol + 0.01) * 100) / 100);
-        } else {
-            // Baisse de 0.01
-            audio.volume = Math.max(0, Math.round((currentVol - 0.01) * 100) / 100);
-        }
+        // On arrondit pour éviter les bugs de virgule infinie du navigateur
+        audio.volume = Math.max(0, Math.min(1, Math.round(newVol * 100) / 100));
+        
         showVolumeDisplay();
     };
-
-    // Premier ajustement immédiat au clic
-    adjust(); 
-
-    // Lance la répétition seulement si on laisse appuyé plus de 500ms
-    volRepeatInterval = setInterval(adjust, 200);
+    adjust();
+    volRepeatInterval = setInterval(adjust, 100);
 }
 
 function stopVolRepeat() {
