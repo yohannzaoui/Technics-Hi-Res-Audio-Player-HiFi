@@ -457,6 +457,14 @@ body {
     text-transform: uppercase; 
 }
 
+#vfd-ab-lock.active { 
+    font-family: var(--ui-font); 
+    font-size: 10px; 
+    font-weight: bold; 
+    color: var(--vfd-red); 
+    text-transform: uppercase; 
+}
+
 .vfd-indicator.active { 
     color: var(--vfd-blue); 
     text-shadow: 0 0 8px var(--vfd-blue); 
