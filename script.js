@@ -13,7 +13,8 @@ let vuMultiplier = 1.2;
 let bassFilter, trebleFilter;
 let bassLevel = 0;   
 let trebleLevel = 0;
-let userPaused = false; 
+let userPaused = false;
+let isABLocked = false;
 
 const gridWrapper = document.getElementById('grid-numbers-wrapper');
 for(let i=1; i<=20; i++) {
@@ -109,6 +110,9 @@ muteBtn.onclick = () => {
 };
 
 function startSearch(dir) {
+    // Bloque si le mode A-B est en cours ou verrouillé
+    if (isABActive() || checkLock()) return; 
+    
     if (!playlist.length || isPeakSearching) return;
     audio.muted = true;
     searchInterval = setInterval(() => {
@@ -130,13 +134,17 @@ document.getElementById('fwd-btn').onmouseup = stopSearch;
 document.getElementById('rew-btn').onmousedown = () => startSearch(-1);
 document.getElementById('rew-btn').onmouseup = stopSearch;
 
+// Bouton +10
 document.getElementById('plus-10-btn').onclick = () => {
+    if (isABActive() || checkLock()) return; // Bloqué en mode A-B
     if (!playlist.length) return;
     audio.currentTime = Math.min(audio.duration, audio.currentTime + 10);
     updateTimeDisplay();
 };
 
+// Bouton -10
 document.getElementById('minus-10-btn').onclick = () => {
+    if (isABActive() || checkLock()) return; // Bloqué en mode A-B
     if (!playlist.length) return;
     audio.currentTime = Math.max(0, audio.currentTime - 10);
     updateTimeDisplay();
@@ -184,6 +192,8 @@ document.getElementById('vu-btn').onclick = () => {
 document.getElementById('ab-btn').onclick = () => {
     if (playlist.length === 0) return;
     const abVfd = document.getElementById('vfd-ab');
+    const abLockVfd = document.getElementById('vfd-ab-lock');
+
     if (pointA === null) { 
         pointA = audio.currentTime; 
         abVfd.classList.add('active', 'vfd-input-blink'); 
@@ -192,33 +202,64 @@ document.getElementById('ab-btn').onclick = () => {
             pointB = audio.currentTime; 
             abVfd.classList.remove('vfd-input-blink'); 
             abVfd.classList.add('active'); 
+            
+            // ACTIVATION DU BLOCAGE
+            isABLocked = true; 
+            if (abLockVfd) abLockVfd.classList.add('active'); 
+            
             audio.currentTime = pointA; 
         }
     } else { 
+        // DÉSACTIVATION DU BLOCAGE
         pointA = null; 
         pointB = null; 
-        abVfd.classList.remove('active', 'vfd-input-blink'); 
+        isABLocked = false;
+        abVfd.classList.remove('active', 'vfd-input-blink');
+        if (abLockVfd) abLockVfd.classList.remove('active'); 
     }
 };
 
 function isABActive() { return pointA !== null; }
 
 document.getElementById('power-reset-btn').onclick = () => {
-    audio.pause(); audio.src = ""; 
-    audio.removeAttribute('src');
+    // 1. Arrêt audio et nettoyage
+    audio.pause(); 
+    audio.src = ""; 
+    audio.removeAttribute('src'); 
     audio.volume = 0.02;
-    playlist = []; currentIndex = 0; pointA = null; pointB = null; isMuted = false;
+    
+    // 2. Réinitialisation des variables
+    playlist = []; 
+    currentIndex = 0; 
+    pointA = null; 
+    pointB = null; 
+    isMuted = false;
+    isABLocked = false; // Ne pas oublier de déverrouiller aussi
+    
+    // 3. Nettoyage de l'interface VFD
     document.querySelectorAll('.vfd-indicator').forEach(el => el.classList.remove('active', 'vfd-input-blink'));
     document.getElementById('main-time-display').classList.remove('vfd-blink-pause');
-    updateDig('t', 0); updateGrid();
+    
+    // --- CORRECTION : On vide l'affichage du format de fichier ---
+    const formatDisplay = document.getElementById('file-format-display');
+    if (formatDisplay) formatDisplay.innerText = "";
+
+    // 4. Reset des compteurs et de la grille
+    updateDig('t', 0); 
+    updateGrid();
+    
+    // 5. Ouverture du tiroir et affichage volume temporaire
     document.getElementById('tray-front').classList.add('open');
     showVolumeDisplay();
     setTimeout(hideVolumeDisplay, 2000);
 };
 
 document.getElementById('play-btn').onclick = () => {
+    if (checkLock()) return; // Bloqué si A-B LOCK est actif
+    
     if (!playlist.length || isPeakSearching) return;
     const timeDisplay = document.getElementById('main-time-display');
+    
     if (audio.paused) {
         audio.play();
         timeDisplay.classList.remove('vfd-blink-pause');
@@ -228,9 +269,12 @@ document.getElementById('play-btn').onclick = () => {
     }
 };
 
-document.getElementById('stop-btn').onclick = () => { 
-    audio.pause(); audio.currentTime = 0; 
-    document.getElementById('main-time-display').classList.remove('vfd-blink-pause'); 
+document.getElementById('stop-btn').onclick = () => {
+    if (checkLock()) return; // Bloqué si A-B LOCK est actif
+    
+    audio.pause();
+    audio.currentTime = 0;
+    document.getElementById('main-time-display').classList.remove('vfd-blink-pause');
     updateTimeDisplay();
 };
 
@@ -253,9 +297,23 @@ function updateTimeDisplay() {
 }
 
 function updateGrid() {
-    const hasOver20 = playlist.length > 20;
     const overArrow = document.getElementById('over-arrow');
-    if (overArrow) overArrow.classList.toggle('active', hasOver20);
+    const hasMoreThan20 = playlist.length > 20;
+    const isCurrentTrackOver20 = (currentIndex + 1) > 20;
+
+    if (overArrow) {
+        // 1. On l'affiche si la playlist est longue
+        overArrow.classList.toggle('active', hasMoreThan20);
+        
+        // 2. On fait clignoter SEULEMENT si la piste actuelle est > 20
+        if (isCurrentTrackOver20) {
+            overArrow.classList.add('vfd-input-blink');
+        } else {
+            overArrow.classList.remove('vfd-input-blink');
+        }
+    }
+
+    // Gestion des chiffres 1 à 20
     for(let i=1; i<=20; i++) {
         const el = document.getElementById(`gn-${i}`);
         if (el) {
@@ -350,6 +408,7 @@ audio.ontimeupdate = () => {
 };
 
 function handleNumKey(num) {
+    if (checkLock()) return; // <--- AJOUT ICI
     if (!playlist.length) return;
     const tDisplay = document.getElementById('t-d1').parentElement;
     if (inputTimeout) { clearTimeout(inputTimeout); inputTimeout = null; }
@@ -416,13 +475,17 @@ document.getElementById('file-input').onchange = (e) => {
 };
 
 document.getElementById('next-btn').onclick = () => {
-    if (isABActive()) return;
-    loadTrack(currentIndex + 1); // Pas de forcePlay, respecte l'état pause
+    if (checkLock()) return; // Bloqué si A-B LOCK est actif
+    
+    if (isABActive()) return; // Bloqué aussi si on définit le point A
+    loadTrack(currentIndex + 1);
 };
 
 document.getElementById('prev-btn').onclick = () => {
-    if (isABActive()) return;
-    loadTrack(currentIndex - 1); // Pas de forcePlay, respecte l'état pause
+    if (checkLock()) return; // Bloqué si A-B LOCK est actif
+    
+    if (isABActive()) return; // Bloqué aussi si on définit le point A
+    loadTrack(currentIndex - 1);
 };
 
 document.getElementById('eject-btn').onclick = () => document.getElementById('tray-front').classList.toggle('open');
@@ -566,4 +629,17 @@ function startToneTimeout() {
 function toggleToneHatch() {
     const hatch = document.getElementById('tone-hatch-block');
     hatch.classList.toggle('hatch-open');
+}
+
+function checkLock(e) {
+    if (isABLocked) {
+        // On fait clignoter l'indicateur LOCK pour montrer que c'est bloqué
+        const lockIndicator = document.getElementById('vfd-ab-lock');
+        lockIndicator.classList.add('vfd-input-blink');
+        setTimeout(() => lockIndicator.classList.remove('vfd-input-blink'), 500);
+        
+        if (e) e.stopPropagation();
+        return true; // C'est bloqué
+    }
+    return false; // Ce n'est pas bloqué
 }
