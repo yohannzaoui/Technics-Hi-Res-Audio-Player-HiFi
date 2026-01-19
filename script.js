@@ -9,11 +9,11 @@ let audioCtx, analyzer, dataArray, searchInterval = null;
 let preMuteVolume = 0.02;
 let isMuted = false;
 let volRepeatInterval = null;
-let vuMultiplier = 1;
+let vuMultiplier = 1.2;
 let bassFilter, trebleFilter;
 let bassLevel = 0;   
 let trebleLevel = 0;
-let volumeBeforeSearch = 0.02;
+let userPaused = false; // Permet de savoir si l'utilisateur a cliqué sur Pause
 
 
 const gridWrapper = document.getElementById('grid-numbers-wrapper');
@@ -88,7 +88,7 @@ function startVolRepeat(dir) {
         showVolumeDisplay();
     };
     adjust();
-    volRepeatInterval = setInterval(adjust, 200);
+    volRepeatInterval = setInterval(adjust, 300);
 }
 
 function stopVolRepeat() {
@@ -117,61 +117,35 @@ muteBtn.onclick = () => {
 };
 
 function startSearch(dir) {
-    // AJOUT : On bloque si la playlist est vide, si Peak Search est actif OU si A-B est actif
-    if (!playlist.length || isPeakSearching || isABActive()) return;
-    
-    if (!searchInterval && audio.playbackRate === 1.0) {
-        volumeBeforeSearch = audio.volume;
-        audio.volume = volumeBeforeSearch * 0.5; 
-    }
-
-    if (dir === 1) {
-        audio.playbackRate = 4.0; 
-    } else {
-        if (searchInterval) clearInterval(searchInterval);
-        searchInterval = setInterval(() => {
-            audio.currentTime = Math.max(0, audio.currentTime - 0.2);
-            updateTimeDisplay();
-        }, 50);
-    }
+    if (!playlist.length || isPeakSearching) return;
+    audio.muted = true;
+    searchInterval = setInterval(() => {
+        audio.currentTime = Math.max(0, Math.min(audio.duration, audio.currentTime + (dir * 2)));
+        updateTimeDisplay();
+    }, 100);
 }
 
 function stopSearch() {
-    if (audio.playbackRate === 1.0 && !searchInterval) return;
-
     if (searchInterval) {
         clearInterval(searchInterval);
         searchInterval = null;
-    }
-    
-    audio.playbackRate = 1.0;
-    
-    if (!isMuted) {
-        audio.volume = volumeBeforeSearch;
-    } else {
-        audio.volume = 0;
+        audio.muted = false;
     }
 }
 
-// LIAISON AUX BOUTONS : On utilise uniquement les événements de CLIC
 document.getElementById('fwd-btn').onmousedown = () => startSearch(1);
 document.getElementById('fwd-btn').onmouseup = stopSearch;
-document.getElementById('fwd-btn').onmouseleave = stopSearch; // Sécurité si la souris sort du bouton
-
 document.getElementById('rew-btn').onmousedown = () => startSearch(-1);
 document.getElementById('rew-btn').onmouseup = stopSearch;
-document.getElementById('rew-btn').onmouseleave = stopSearch; // Sécurité si la souris sort du bouton
 
 document.getElementById('plus-10-btn').onclick = () => {
-    // AJOUT : "|| isABActive()"
-    if (!playlist.length || isABActive()) return; 
+    if (!playlist.length) return;
     audio.currentTime = Math.min(audio.duration, audio.currentTime + 10);
     updateTimeDisplay();
 };
 
 document.getElementById('minus-10-btn').onclick = () => {
-    // AJOUT : "|| isABActive()"
-    if (!playlist.length || isABActive()) return;
+    if (!playlist.length) return;
     audio.currentTime = Math.max(0, audio.currentTime - 10);
     updateTimeDisplay();
 };
@@ -258,11 +232,14 @@ document.getElementById('power-reset-btn').onclick = () => {
 document.getElementById('play-btn').onclick = () => {
     if (!playlist.length || isPeakSearching) return;
     const timeDisplay = document.getElementById('main-time-display');
+    
     if (audio.paused) {
         audio.play();
+        userPaused = false; // L'utilisateur veut que ça joue
         timeDisplay.classList.remove('vfd-blink-pause');
     } else {
         audio.pause();
+        userPaused = true; // L'utilisateur a explicitement mis en PAUSE
         timeDisplay.classList.add('vfd-blink-pause');
     }
 };
@@ -328,18 +305,22 @@ function updateMediaSession() {
 
 function loadTrack(idx) {
     if (!playlist.length) return;
-    
-    // On mémorise si la musique jouait avant le changement
-    const wasPlaying = !audio.paused;
+
+    const timeDisplay = document.getElementById('main-time-display');
+    // On mémorise si l'appareil était en mode pause (clignotant) avant le changement
+    const wasPaused = timeDisplay.classList.contains('vfd-blink-pause');
+    const isFirstLoad = (!audio.src || audio.src === "" || audio.src.includes("null"));
 
     if (isRandom && idx !== currentIndex) {
         idx = Math.floor(Math.random() * playlist.length);
     }
-    
     currentIndex = (idx + playlist.length) % playlist.length;
     const currentFile = playlist[currentIndex];
+    
+    if (audio.src) URL.revokeObjectURL(audio.src);
     audio.src = URL.createObjectURL(currentFile);
     
+    // Affichage format (on ne touche à rien ici)
     const formatDisplay = document.getElementById('file-format-display');
     if (formatDisplay && currentFile.name) {
         formatDisplay.innerText = currentFile.name.split('.').pop().toUpperCase();
@@ -347,18 +328,25 @@ function loadTrack(idx) {
     
     updateDig('t', currentIndex + 1);
     updateGrid(); 
-    
-    // --- CONDITION DE LECTURE ---
-    // On ne lance play() QUE si la musique jouait déjà
-    if (wasPlaying) {
+
+    // LOGIQUE DE LECTURE :
+    if (isFirstLoad) {
+        // Premier chargement : Lecture automatique
         audio.play();
-        document.getElementById('main-time-display').classList.remove('vfd-blink-pause'); 
-    } else {
-        // Si on était sur STOP, on s'assure que le temps est à 00:00
+        timeDisplay.classList.remove('vfd-blink-pause');
+    } else if (wasPaused) {
+        // Si on était en pause : on force l'audio à rester en pause
+        audio.pause();
         audio.currentTime = 0;
+        // On s'assure que l'affichage continue de clignoter
+        timeDisplay.classList.add('vfd-blink-pause');
         updateTimeDisplay();
+    } else {
+        // Si on était en lecture : on continue
+        audio.play();
+        timeDisplay.classList.remove('vfd-blink-pause');
     }
-    
+
     updateMediaSession();
     setupAudio(); 
     extractMetadata(playlist[currentIndex]);
@@ -374,9 +362,28 @@ if ('mediaSession' in navigator) {
 
 audio.onended = () => {
     if (isABActive()) return;
-    if (repeatMode === 1) audio.play();
-    else if (isRandom || repeatMode === 2 || currentIndex < playlist.length - 1) loadTrack(currentIndex + 1);
+    
+    if (repeatMode === 1) {
+        audio.play();
+    } else if (repeatMode === 2 || isRandom || currentIndex < playlist.length - 1) {
+        // On retire le mode pause pour l'enchaînement automatique
+        document.getElementById('main-time-display').classList.remove('vfd-blink-pause');
+        loadTrack(currentIndex + 1);
+    } else {
+        audio.pause();
+        audio.currentTime = 0;
+        updateTimeDisplay();
+    }
 };
+
+// Petite fonction utilitaire pour forcer la lecture lors de l'enchaînement auto
+function loadTrackManual(idx, forcePlay) {
+    loadTrack(idx);
+    if (forcePlay) {
+        audio.play();
+        document.getElementById('main-time-display').classList.remove('vfd-blink-pause');
+    }
+}
 
 audio.ontimeupdate = () => {
     if (pointA !== null && pointB !== null && audio.currentTime >= pointB) audio.currentTime = pointA;
