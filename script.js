@@ -282,9 +282,13 @@ function updateMediaSession() {
     }
 }
 
-function loadTrack(idx) {
+function loadTrack(idx, forcePlay = false) {
     if (!playlist.length) return;
     const timeDisplay = document.getElementById('main-time-display');
+    
+    // Déterminer l'état AVANT de changer la source
+    const isAfterReset = (audio.src === "" || !audio.getAttribute('src'));
+    const wasPlaying = !audio.paused && !timeDisplay.classList.contains('vfd-blink-pause');
 
     if (isRandom && idx !== currentIndex) {
         idx = Math.floor(Math.random() * playlist.length);
@@ -296,7 +300,7 @@ function loadTrack(idx) {
     if (audio.src) URL.revokeObjectURL(audio.src);
     audio.src = URL.createObjectURL(currentFile);
     
-    // UI Updates
+    // UI Update
     const formatDisplay = document.getElementById('file-format-display');
     if (formatDisplay && currentFile.name) {
         formatDisplay.innerText = currentFile.name.split('.').pop().toUpperCase();
@@ -304,10 +308,19 @@ function loadTrack(idx) {
     updateDig('t', currentIndex + 1);
     updateGrid(); 
 
-    // ALWAYS PLAY on track change (standard CD player behavior)
-    audio.play().then(() => {
-        if (timeDisplay) timeDisplay.classList.remove('vfd-blink-pause');
-    }).catch(e => console.log("Playback blocked or failed:", e));
+    // LOGIQUE DE LECTURE
+    // On joue si : forcePlay est vrai (auto-enchaînement) OU si c'est un disque neuf OU si on lisait déjà
+    if (forcePlay || isAfterReset || wasPlaying) {
+        audio.play().then(() => {
+            timeDisplay.classList.remove('vfd-blink-pause');
+        }).catch(e => console.log("Playback error:", e));
+    } else {
+        // Reste en pause (cas du Next/Prev manuel alors qu'on était en Pause)
+        audio.pause();
+        audio.currentTime = 0;
+        timeDisplay.classList.add('vfd-blink-pause');
+        updateTimeDisplay();
+    }
 
     updateMediaSession();
     setupAudio(); 
@@ -328,8 +341,8 @@ audio.onended = () => {
     if (repeatMode === 1) {
         audio.play();
     } else if (repeatMode === 2 || isRandom || currentIndex < playlist.length - 1) {
-        // Just call loadTrack, the new logic inside will handle the play()
-        loadTrack(currentIndex + 1);
+        // On force la lecture pour la piste suivante (forcePlay = true)
+        loadTrack(currentIndex + 1, true);
     } else {
         audio.pause();
         audio.currentTime = 0;
@@ -423,14 +436,13 @@ document.getElementById('file-input').onchange = (e) => {
 
 document.getElementById('next-btn').onclick = () => {
     if (isABActive()) return;
-    loadTrack(currentIndex + 1);
+    loadTrack(currentIndex + 1); // Respecte l'état actuel
 };
 
 document.getElementById('prev-btn').onclick = () => {
     if (isABActive()) return;
-    loadTrack(currentIndex - 1);
+    loadTrack(currentIndex - 1); // Respecte l'état actuel
 };
-
 document.getElementById('eject-btn').onclick = () => document.getElementById('tray-front').classList.toggle('open');
 document.getElementById('random-btn').onclick = () => { 
     isRandom = !isRandom; 
