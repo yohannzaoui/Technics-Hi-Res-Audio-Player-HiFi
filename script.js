@@ -639,7 +639,53 @@ function checkLock(e) {
         setTimeout(() => lockIndicator.classList.remove('vfd-input-blink'), 500);
         
         if (e) e.stopPropagation();
-        return true; // C'est bloqué
+        return true;
     }
-    return false; // Ce n'est pas bloqué
+    return false;
 }
+
+/**
+ * GESTION DES COULEURS VFD
+ */
+const vfdColors = [
+    '#40e0ff', // Blue
+    '#ffffff', // White
+    '#a0a0a0', // Silver
+    '#50ff7a', // Green
+    '#FFF703', // Yellow
+];
+
+let currentColorIndex = 0;
+
+// Fonction pour appliquer la couleur aux variables CSS
+function setGlobalVFDColor(color) {
+    const root = document.documentElement;
+    root.style.setProperty('--vfd-blue', color);
+    
+    // Crée une lueur (glow) assortie avec 40% d'opacité (hex + 66)
+    root.style.setProperty('--vfd-glow', color + '66');
+    
+    // Sauvegarde dans les préférences utilisateur
+    localStorage.setItem('technics-vfd-color', color);
+}
+
+// Initialisation au chargement
+window.addEventListener('DOMContentLoaded', () => {
+    const savedColor = localStorage.getItem('technics-vfd-color');
+    if (savedColor) {
+        setGlobalVFDColor(savedColor);
+        currentColorIndex = vfdColors.indexOf(savedColor);
+        if (currentColorIndex === -1) currentColorIndex = 0;
+    }
+});
+
+// Événement sur le logo
+document.getElementById('vfd-color-trigger').onclick = (e) => {
+    e.preventDefault(); // Empêche le comportement par défaut du lien
+    
+    // Passe à la couleur suivante
+    currentColorIndex = (currentColorIndex + 1) % vfdColors.length;
+    const nextColor = vfdColors[currentColorIndex];
+    
+    setGlobalVFDColor(nextColor);
+};

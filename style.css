@@ -1,16 +1,24 @@
 :root {
-    --bg-black: #a5a5a5;
+    --bg-black: #a5a5a5; /* backgound par defaut #a5a5a5*/
     --deck-gray: #1a1a1b;
     --vfd-blue: #40e0ff;
+    --vfd-green: #008000;
+    --vfd-yellow: #FFFF00;
+    --vfd-brown: #9F7E69;
     --vfd-glow: rgba(64, 224, 255, 0.5);
     --vfd-blue-dim: #003a4d;
     --vfd-off: #0a0a0a;
     --vfd-red: #ff3333;
     --text-silver: #a0a0a0;
+    --text-beige: #b6b69f;
+    --text-gold: #7a6a0c;
+    --text-brown: #9F7E69;
     --text-white: #ffffff;
     --ui-font: 'Segoe UI', Tahoma, sans-serif;
     --digital-font: 'DS-Digital', sans-serif;
-    --brushed-metal: conic-gradient(from 0deg, #222 0deg, #444 45deg, #222 90deg, #444 135deg, #222 180deg, #444 225deg, #222 270deg, #444 315deg, #222 360deg);
+    --brushed-metal: conic-gradient(
+        from 0deg, #222 0deg, #444 45deg, #222 90deg, #444 135deg, #222 180deg, #444 225deg, #222 270deg, #444 315deg, #222 360deg
+        );
 }
 
 body {
@@ -32,7 +40,7 @@ body {
     padding: 25px 120px 60px 120px; 
     border-top: 1px solid #cfcfcf;
     border-radius: 4px; 
-    box-shadow: 0 120px 150px rgb(49, 49, 49);
+    box-shadow: 0 200px 200px rgb(49, 49, 49);
     position: relative;
     z-index: 1;
 }
@@ -207,7 +215,7 @@ body {
 
 .label-vfd { 
     font-size: 11px; 
-    color: var(--vfd-blue); 
+    color: var(--vfd-blue); /* couleur texte par défaut de l'afficheur */
     font-family: var(--ui-font); 
     font-weight: bold; 
     text-transform: uppercase; 
@@ -285,7 +293,7 @@ body {
 }
 
 .btn { 
-    background: linear-gradient(145deg, #2a2a2b, #151516); 
+    background: linear-gradient(185deg, #2a2a2b, #151516); /* dégradé bouton */
     border: 1px solid #111; 
     color: var(--text-silver); 
     cursor: pointer; 
@@ -429,7 +437,8 @@ body {
 }
 
 .grid-num.loaded { 
-    color: #40e0ff; 
+    color: var(--vfd-blue); /* Remplace #40e0ff par la variable */
+    transition: color 0.3s ease; /* Optionnel : pour une transition douce lors du clic */
 }
 
 .grid-num.active-track { 
