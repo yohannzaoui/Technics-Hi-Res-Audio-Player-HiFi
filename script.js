@@ -648,11 +648,11 @@ function checkLock(e) {
  * GESTION DES COULEURS VFD
  */
 const vfdColors = [
-    '#40e0ff', // Blue (Original)
-    '#50ff7a', // Green
-    '#FFF703', // Yellow
+    '#40e0ff', // Blue
     '#ffffff', // White
     '#a0a0a0', // Silver
+    '#50ff7a', // Green
+    '#FFF703', // Yellow
 ];
 
 let currentColorIndex = 0;
