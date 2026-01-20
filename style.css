@@ -721,7 +721,7 @@ body {
 
 .vu-sense-group {
     display: block;        /* Permet d'appliquer des marges correctement */
-    margin-top: 55px;      /* Ajuste cette valeur pour descendre le mot plus ou moins bas */
+    margin-top: 70px;      /* Ajuste cette valeur pour descendre le mot plus ou moins bas */
     margin-bottom: -10px;    /* Espace entre le mot et la trappe */
     transition: all 0.3s;  /* Optionnel : pour un mouvement fluide si tu le modifies */
 }
