@@ -8,7 +8,7 @@
         /* REGLAGE DE LA TAILLE DE LA POLICE ICI */
         :root {
             --font-size-base: 32px;
-            --brand-opacity: 0.85;
+            --logo-width: 200px; /* Vous pouvez régler la taille du logo ici */
         }
 
         body {
@@ -28,15 +28,21 @@
             text-align: center;
             display: flex;
             flex-direction: column;
-            gap: 20px; /* Espace entre les boutons */
+            align-items: center;
+            gap: 25px; /* Espace entre le logo et les liens */
         }
 
-        .brand-logo { 
-            height: 18px; 
-            width: auto; 
-            opacity: var(--brand-opacity); 
-            filter: grayscale(1); 
-            transform: translateY(-3px); 
+        .logo-top {
+            width: var(--logo-width);
+            height: auto;
+            margin-bottom: 10px; /* Espace supplémentaire sous le logo */
+            display: block;
+        }
+
+        .links-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 20px; /* Espace entre les textes Mini, HiFi, Touchscreen */
         }
 
         a {
@@ -46,9 +52,8 @@
             font-weight: 300;
         }
 
-        /* Pas d'effet de surbrillance comme demandé */
         a:hover {
-            opacity: 1;
+            opacity: 1; /* Pas d'effet de surbrillance */
         }
 
     </style>
@@ -56,13 +61,16 @@
 <body>
 
     <div class="container">
-        <a href="https://yohannzaoui.github.io/Technics-Hi-Res-Audio-Player-Mini/">Mini</a>
-        <a href="https://yohannzaoui.github.io/Technics-Hi-Res-Audio-Player-HiFi/">HiFi</a>
-        <a href="https://yohannzaoui.github.io/Technics-Hi-Res-Audio-Player-Touchscreen/">Touchscreen</a>
+        <img src="img/Technics-Logo-org.png" alt="Technics Logo" class="logo-top">
+        
+        <div class="links-wrapper">
+            <a href="https://yohannzaoui.github.io/Technics-Hi-Res-Audio-Player-Mini/">Mini</a>
+            <a href="https://yohannzaoui.github.io/Technics-Hi-Res-Audio-Player-HiFi/">HiFi</a>
+            <a href="https://yohannzaoui.github.io/Technics-Hi-Res-Audio-Player-Touchscreen/">Touchscreen</a>
+        </div>
     </div>
 
     <script>
-        // Sauvegarde automatique des préférences (Sombre et Anglais)
         document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('theme', 'dark');
             localStorage.setItem('lang', 'en');
