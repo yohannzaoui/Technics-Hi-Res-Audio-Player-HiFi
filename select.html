@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Mode</title>
+    <style>
+        /* REGLAGE DE LA TAILLE DE LA POLICE ICI */
+        :root {
+            --font-size-base: 32px;
+            --brand-opacity: 0.85;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000000; /* Fond noir */
+            color: #ffffff;           /* Texte blanc */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 20px; /* Espace entre les boutons */
+        }
+
+        .brand-logo { 
+            height: 18px; 
+            width: auto; 
+            opacity: var(--brand-opacity); 
+            filter: grayscale(1); 
+            transform: translateY(-3px); 
+        }
+
+        a {
+            color: #ffffff; /* Liens en blanc */
+            text-decoration: none;
+            font-size: var(--font-size-base);
+            font-weight: 300;
+        }
+
+        /* Pas d'effet de surbrillance comme demandé */
+        a:hover {
+            opacity: 1;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <a href="https://yohannzaoui.github.io/Technics-Hi-Res-Audio-Player-Mini/">Mini</a>
+        <a href="https://yohannzaoui.github.io/Technics-Hi-Res-Audio-Player-HiFi/">HiFi</a>
+        <a href="https://yohannzaoui.github.io/Technics-Hi-Res-Audio-Player-Touchscreen/">Touchscreen</a>
+    </div>
+
+    <script>
+        // Sauvegarde automatique des préférences (Sombre et Anglais)
+        document.addEventListener('DOMContentLoaded', () => {
+            localStorage.setItem('theme', 'dark');
+            localStorage.setItem('lang', 'en');
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.documentElement.setAttribute('lang', 'en');
+        });
+    </script>
+</body>
+</html>
