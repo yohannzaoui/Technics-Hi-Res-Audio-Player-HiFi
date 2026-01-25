@@ -861,3 +861,18 @@ body {
     font-size: 8px;
     color: var(--text-silver);
 }
+
+
+
+.btn i {
+    font-size: 14px; /* Taille des symboles */
+    color: var(--text-silver); /* Utilise ta couleur argentée */
+    pointer-events: none; /* Évite que l'icône bloque le clic du bouton */
+}
+
+/* Effet au survol ou quand le bouton est actif */
+.btn:hover i {
+    color: var(--vfd-blue); /* Les icônes s'illuminent en bleu VFD au survol */
+    text-shadow: 0 0 5px var(--vfd-glow);
+}
+
