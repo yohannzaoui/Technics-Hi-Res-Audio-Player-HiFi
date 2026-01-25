@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Technics Hi-Res Audio Player HiFi';
+const CACHE_NAME = 'Technics Master Edition';
 
 const assetsToCache = [
     './',
