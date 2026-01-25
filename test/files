@@ -1,0 +1,1783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technics High Resolution Audio Player</title>
+    <meta name="author" content="Yohann Zaoui">
+	<link rel="icon" type="image/x-icon" href="img/favicon.ico">
+    <link rel="apple-touch-icon" href="img/favicon.ico">
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <link rel="manifest" href="manifest.json">
+    <link href="https://fonts.cdnfonts.com/css/ds-digital" rel="stylesheet">
+    <style>
+		:root {
+    --bg-black: #a5a5a5; /* backgound par defaut #a5a5a5*/
+    --deck-gray: #1a1a1b;
+    --vfd-blue: #40e0ff;
+    --vfd-green: #008000;
+    --vfd-yellow: #FFFF00;
+    --vfd-brown: #9F7E69;
+    --vfd-glow: rgba(64, 224, 255, 0.5);
+    --vfd-blue-dim: #003a4d;
+    --vfd-off: #0a0a0a;
+    --vfd-red: #ff3333;
+    --text-silver: #a0a0a0;
+    --text-beige: #b6b69f;
+    --text-gold: #7a6a0c;
+    --text-brown: #9F7E69;
+    --text-white: #ffffff;
+    --ui-font: 'Segoe UI', Tahoma, sans-serif;
+    --digital-font: 'DS-Digital', sans-serif;
+    --brushed-metal: conic-gradient(
+        from 0deg, #222 0deg, #444 45deg, #222 90deg, #444 135deg, #222 180deg, #444 225deg, #222 270deg, #444 315deg, #222 360deg
+        );
+}
+
+body {
+    background-color: var(--bg-black);
+    color: var(--text-silver);
+    font-family: var(--ui-font);
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    min-height: 100vh; 
+    margin: 0; 
+    user-select: none;
+    overflow: hidden;
+}
+
+.deck-container {
+    width: 1600px; 
+    background-color: var(--deck-gray);
+    padding: 25px 120px 60px 120px; 
+    border-top: 1px solid #cfcfcf;
+    border-radius: 4px; 
+    box-shadow: 0 200px 200px rgb(49, 49, 49);
+    position: relative;
+    z-index: 1;
+}
+
+.brand-header {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    margin-bottom: 25px; 
+    padding-bottom: 12px; 
+    border-bottom: 0px solid #222;
+}
+
+.main-logo { 
+    height: 23px; 
+    display: block; 
+    margin-left: -70px;
+}
+
+.model-name { 
+    font-size: 12px; 
+    color: var(--text-silver); 
+    letter-spacing: 3px; 
+    font-weight: bold; 
+    text-transform: uppercase; 
+    margin-right: -60px; 
+}
+
+.tray-outer-slot {
+    width: 100%; 
+    height: 75px; 
+    background: #1a1a1b;
+    margin-bottom: 35px; 
+    position: relative; 
+    overflow: hidden; 
+    border: 1px solid #1a1a1b;
+}
+
+
+.tray-mechanism {
+    position: absolute;
+    width: 64%;
+    height: 100%; /* Prend toute la hauteur du slot parent */
+    background: linear-gradient(180deg, #1a1a1b 0%, #151516 100%);
+    top: 0;
+    left: 18%;
+    z-index: 10;
+    transition: transform 1.1s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    /* LES BORDURES COMPLETES */
+    border: 2px solid #000;      /* Trace les 4 côtés */
+    box-sizing: border-box;      /* IMPORTANT : garde le tiroir à 100% de hauteur bordures incluses */
+    
+    /* Optionnel : un petit reflet pour voir le relief en haut */
+    border-top-color: #333; 
+}
+
+/* On s'assure que l'animation de descente est toujours là */
+.tray-mechanism.open {
+    transform: translateY(70px); /* Ajuste à 68px si tu veux voir le haut du tiroir */
+}
+.mash-logo-tray { height: 35px; 
+    opacity: 0.5; 
+    filter: grayscale(1) brightness(1,5); 
+}
+
+.power-section, .eject-section {
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    gap: 10px; 
+    font: center; ;
+}
+
+.power-section {
+    margin-left: -10px;
+}
+
+.transport-grid { 
+    display: grid; 
+    grid-template-columns: repeat(5, 1fr); 
+    gap: 15px; 
+    margin-top: 55px; 
+    width: 100%; 
+    align-items: end; 
+}
+
+.eject-section { 
+    margin-top:20px; 
+}
+
+.upper-label, .volume-label {
+    font-size: 9px; 
+    font-weight: bold; 
+    color: var(--text-silver);
+    letter-spacing: 1px; 
+    text-transform: uppercase; 
+    white-space: nowrap;
+}
+
+.display-panel {
+    background: #000; 
+    padding: 25px 35px; 
+    border: 4px solid #111;
+    box-shadow: inset 0 0 60px rgba(0,0,0,1), 0 0 20px var(--vfd-glow);
+    min-height: 240px; 
+    display: flex; 
+    flex-direction: column;
+    justify-content: space-between; 
+    box-sizing: border-box;
+}
+
+.vfd-main-row { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: flex-end; 
+    margin-bottom: 10px; 
+}
+
+.vfd-col-track { 
+    flex: 0 0 120px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: flex-start; 
+}
+
+.vfd-col-time { 
+    flex: 0 0 240px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: flex-end; 
+}
+
+.vfd-col-indicators { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    gap: 4px; 
+    border-left: 1px solid #111; 
+    border-right: 1px solid #111;
+    margin: 0 25px; 
+    padding: 5px 0;
+}
+
+.digital-counter {
+    display: flex; 
+    align-items: baseline; 
+    font-family: var(--digital-font); 
+    font-size: 60px; 
+    font-weight: bold; 
+    color: var(--vfd-blue);
+    text-shadow: 0 0 15px var(--vfd-blue-dim); 
+    line-height: 1; 
+    height: 60px;
+}
+
+.digit { 
+    width: 38px; 
+    text-align: center; 
+}
+
+.time-separator { 
+    width: 15px; 
+    text-align: center; 
+    font-size: 40px; 
+    margin: 0 2px; 
+}
+
+.label-vfd { 
+    font-size: 11px; 
+    color: var(--vfd-blue); /* couleur texte par défaut de l'afficheur */
+    font-family: var(--ui-font); 
+    font-weight: bold; 
+    text-transform: uppercase; 
+    margin-bottom: 4px; 
+    letter-spacing: 2px;
+}
+
+.label-vfd.clickable { 
+    color: var(--vfd-blue); 
+    transition: color 0.2s; 
+}
+
+.vu-meters { 
+    margin-top: 15px; 
+    padding-top: 10px; 
+    border-top: 1px solid #0a0a0a; 
+}
+
+.vu-row { 
+    display: flex; 
+    align-items: center; 
+    gap: 15px; 
+    margin-bottom: 8px; 
+}
+
+.vu-label { 
+    font-family: var(--ui-font); 
+    font-size: 14px; 
+    font-weight: 900; 
+    width: 15px; 
+    color: #08181a; 
+    transition: all 0.3s; 
+    line-height: 1; 
+    text-align: center;
+}
+
+.vu-label.on { 
+    color: var(--vfd-blue); 
+    text-shadow: 0 0 10px var(--vfd-glow); 
+}
+
+.meter-container { 
+    flex: 1; 
+    height: 12px; 
+    background: #080808; 
+    display: flex; 
+    gap: 2px; 
+    padding: 1px; 
+    align-items: stretch; 
+}
+
+.meter-segment { 
+    flex: 1; 
+    background: var(--vfd-off); 
+    transition: background 0.05s; 
+}
+
+.meter-segment.on-blue { 
+    background: var(--vfd-blue); 
+    box-shadow: 0 0 5px var(--vfd-blue); 
+}
+
+.meter-segment.on-red { 
+    background: var(--vfd-red); 
+    box-shadow: 0 0 5px var(--vfd-red); 
+}
+
+.main-interface { 
+    display: grid; 
+    grid-template-columns: 120px 1fr 340px; 
+    gap: 60px; 
+    align-items: start; 
+    margin-left: -40px; 
+    margin-right: 0px; 
+}
+
+.btn { 
+    background: linear-gradient(185deg, #2a2a2b, #151516); /* dégradé bouton */
+    border: 1px solid #111; 
+    color: var(--text-silver); 
+    cursor: pointer; 
+    font-size: 11px; 
+    font-weight: bold; 
+    box-shadow: 3px 3px 6px #000; 
+    text-transform: uppercase; 
+    height: 50px; 
+    width: 100%;
+    padding: 0 5px; 
+    text-align: center;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+}
+
+.btn:active { 
+    background: linear-gradient(145deg, #151516, #2a2a2b); 
+    box-shadow: inset 2px 2px 5px #000; 
+    color: var(--text-white); 
+}
+
+#power-reset-btn { 
+    height: 50px; 
+    width: 90px; 
+}
+
+#stop-btn, #eject-btn { 
+    font-size: 22px; 
+    color: var(--text-silver); 
+}
+
+.numeric-grid { 
+    display: grid; 
+    grid-template-columns: repeat(10, 1fr); 
+    gap: 35px; 
+    margin-top: 25px; 
+    width: 100%;
+}
+
+/* Taille du logo HR */
+.hr-logo-bottom { 
+    position: absolute; 
+    left: 50px; 
+    bottom: 65px; 
+    height: 40px; 
+    opacity: 0.7; 
+    pointer-events: none; 
+}
+
+/* Modals */
+#art-modal, #playlist-modal {
+    display: none; 
+    position: fixed; 
+    z-index: 10000; 
+    left: 0; 
+    top: 0; 
+    width: 100%; 
+    height: 100%; 
+    background-color: rgba(0,0,0,0.95); 
+    justify-content: center; 
+    align-items: center; 
+    backdrop-filter: blur(15px);
+}
+
+.modal-content {
+    background: #111; 
+    border: 2px solid #333; 
+    padding: 30px;
+    box-shadow: 0 0 100px rgba(0,0,0,1); 
+    text-align: center; 
+    border-radius: 8px;
+}
+.list-content { 
+    max-width: 600px; 
+    width: 90%; 
+    max-height: 80vh; 
+    overflow-y: auto; 
+}
+
+#track-list-container { 
+    text-align: left; 
+    margin-top: 15px; 
+    border-top: 1px solid #222; 
+}
+
+.track-item { 
+    padding: 12px; 
+    border-bottom: 1px solid #222; 
+    cursor: pointer; 
+    color: var(--text-silver);
+    font-size: 14px; 
+    transition: all 0.2s; 
+    font-family: var(--ui-font);
+}
+
+.track-item:hover { 
+    background: #1a1a1b; 
+    color: var(--vfd-blue); 
+}
+
+.track-item.active { 
+    color: var(--vfd-red); 
+    font-weight: bold; 
+    background: #080808; 
+}
+
+#art-image { 
+    max-width: 600px; 
+    max-height: 600px; 
+    width: 100%; 
+    border-radius: 4px; 
+}
+
+#art-info { 
+    color: var(--vfd-blue); 
+    margin-top: 25px; 
+    font-weight: bold; 
+    text-transform: uppercase; 
+    font-size: 16px; 
+}
+
+/* Grille et Indicateurs */
+.track-grid { 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    gap: 10px; 
+    margin: 20px 0; 
+    padding: 12px 0; 
+    border-top: 1px solid #0a0a0a; 
+    border-bottom: 1px solid #0a0a0a; 
+}
+
+.grid-num { 
+    font-size: 14px; 
+    font-weight: bold; 
+    color: #0d0d0d; 
+    min-width: 18px; 
+    text-align: center; 
+}
+
+.grid-num.loaded { 
+    color: var(--vfd-blue); /* Remplace #40e0ff par la variable */
+    transition: color 0.3s ease; /* Optionnel : pour une transition douce lors du clic */
+}
+
+.grid-num.active-track { 
+    color: #ff3333 !important; 
+    text-shadow: 0 0 12px #ff3333; 
+}
+
+.arrow-indicator { 
+    font-size: 14px; 
+    color: #0d0d0d; 
+    visibility: hidden; 
+}
+
+.arrow-indicator.active { 
+    visibility: visible; c
+    olor: #ff3333; 
+    text-shadow: 0 0 10px #ff3333; 
+}
+
+.vfd-indicator { 
+    font-family: var(--ui-font); 
+    font-size: 10px; 
+    font-weight: bold; 
+    color: #08181a; 
+    text-transform: uppercase; 
+}
+
+#vfd-ab-lock.active { 
+    font-family: var(--ui-font); 
+    font-size: 10px; 
+    font-weight: bold; 
+    color: var(--vfd-red); 
+    text-transform: uppercase; 
+}
+
+.vfd-indicator.active { 
+    color: var(--vfd-blue); 
+    text-shadow: 0 0 8px var(--vfd-blue); 
+}
+
+/* Animations */
+@keyframes vfd-input-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+.vfd-input-blink { animation: vfd-input-blink 1s infinite; }
+.vfd-blink-pause { animation: vfd-input-blink 1s infinite; }
+
+.invisible-link {
+    text-decoration: none; /* Supprime le soulignement */
+    cursor: default;       /* Empêche la flèche de devenir une main */
+    outline: none;         /* Supprime le cadre bleu au clic */
+    display: inline-block;
+}
+
+.invisible-link img {
+    border: none;
+}
+
+.file-format {
+    font-family: var(--ui-font);
+    font-size: 10px;
+    color: var(--vfd-blue);
+    opacity: 1;
+    text-transform: uppercase;
+    margin-left: 10px;
+    align-self: flex-end;
+    padding-bottom: 8px;
+    letter-spacing: 1px;
+}
+
+/* On crée une règle spécifique pour les boutons de la grille numérique */
+.numeric-grid .btn {
+    height: 50px;      /* On réduit la hauteur ici */
+    font-size: 13px;   /* Taille du texte */
+    margin-bottom: 5px; 
+}
+
+
+/* Ciblage spécifique de la rangée de transport (Play, Stop, Next, etc.) */
+.transport-grid .btn {
+    height: 60px;       /* Réduit la hauteur (était 50px) */
+    width: 190px;
+    font-size: 10px;    /* Réduit la taille des icônes/texte pour que ça rentre */
+    padding: 0;         /* Enlève les marges internes pour gagner de la place */
+}
+
+/* Optionnel : Ajuster l'espace entre le label (ex: PLAY/PAUSE) et le bouton */
+.transport-grid .eject-section {
+    gap: 5px;           /* Espace entre le texte au-dessus et le bouton */
+}
+
+#vol-down-btn, #vol-up-btn {
+    width: 100px !important;  /* Force la largeur */
+    min-width: 0 !important; /* Supprime toute sécurité qui empêcherait de rétrécir */
+    flex: none !important;   /* Empêche le bouton de s'étirer tout seul */
+    height: 70px;
+}
+
+#mute-btn {
+    width: 60px !important;
+    min-width: 0 !important;
+    flex: none !important;
+    height: 70px;
+}
+
+/* On cible le conteneur des boutons de volume */
+.controls-right-stack div[style*="display: flex"],
+.volume-controls-container {
+    margin-top: 50px; /* Augmente ce chiffre pour descendre plus bas */
+}
+
+
+/* Remplace .volume-label par la classe que tu utilises pour le texte "VOLUME" */
+.volume-label {
+    display: block; /* S'assure que l'élément peut être déplacé */
+    transform: translateY(50px); /* Descend le mot de 15px vers le bas */
+}
+
+.label-tiny {
+    position: absolute;
+    top: -15px;
+    font-size: 9px;
+    color: #555;
+}
+
+.vu-sense-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px; /* Espace sous le bloc volume */
+}
+
+.vu-controls-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* On force la taille identique au volume */
+#vu-down-btn, #vu-up-btn {
+    width: 90px !important;
+    height: 40px !important;
+    min-width: 0 !important;
+    flex: none !important;
+    margin-bottom: 20px;
+}
+
+/* Style optionnel pour le label (comme tu as demandé précédemment) */
+.vu-sense-group .upper-label {
+    font-size: 10px;
+    letter-spacing: 1px;
+    /* background-color: #222; (Si tu veux un fond de couleur) */
+}
+
+#over-arrow {
+    color: #220000; /* Couleur éteinte (rouge très sombre) */
+    transition: all 0.3s;
+}
+
+#over-arrow.active {
+    color: #ff0000 !important; /* Rouge vif */
+    text-shadow: 0 0 8px rgba(255, 0, 0, 0.8); /* Effet néon/VFD */
+}
+
+
+/* --- REFLET VERTICAL HAUT EN BAS --- */
+
+.display-panel {
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.display-panel::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    
+    /* Dégradé de 180deg pour aller de haut en bas */
+    /* On crée une bande claire en haut qui s'estompe rapidement */
+    background: linear-gradient(
+        180deg, 
+        rgba(255, 255, 255, 0.15) 0%,   /* Éclat maximal au bord supérieur */
+        rgba(255, 255, 255, 0.05) 15%,  /* Dégradé rapide */
+        transparent 50%,                /* Zone sombre au milieu pour la lisibilité */
+        rgba(255, 255, 255, 0.02) 80%,  /* Très léger reflet de surface en bas */
+        rgba(255, 255, 255, 0.07) 100%  /* Petit liseré de lumière sur le bord bas */
+    );
+    
+    z-index: 999; 
+    pointer-events: none;
+    
+    /* Ajout d'une légère brillance sur toute la surface pour l'effet "vitre" */
+    background-color: rgba(255, 255, 255, 0.01);
+}
+
+
+
+.vu-hatch-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 25px;
+}
+
+/* On ajuste aussi le cadre pour que l'intégration soit propre */
+.vu-hatch-frame {
+    width: 270px; 
+    height: 55px;
+    background: #070707; /* Fond noir profond derrière le cache */
+    border: 2px solid #000; /* Bordure extérieure du cadre */
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+    margin-top: 5px;
+}
+
+#vu-hatch-block {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, #1a1a1b 0%, #151516 100%); /* Même dégradé que le tiroir */
+    
+    /* COPIE EXACTE DES BORDURES DU TIROIR CD */
+    border: 2px solid #000;      /* Trace les 4 côtés */
+    border-top-color: #333;      /* Petit reflet de relief en haut */
+    box-sizing: border-box;      /* Garde les bordures incluses dans la taille */
+    
+    z-index: 20;
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hatch-logo {
+    font-size: 10px;
+    color: #444;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+/* État ouvert : le cache descend de 100% de sa hauteur */
+#vu-hatch-block.hatch-open {
+    transform: translateY(95%);
+}
+
+#vu-hatch-block.hatch-closed {
+    transform: translateY(0);
+}
+
+/* On s'assure que les boutons sont bien centrés derrière */
+.vu-controls-container {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+.hatch-texture {
+    width: 100%;
+    height: 100%;
+    /* Un dégradé très fin pour simuler l'aluminium brossé */
+    background: linear-gradient(180deg, 
+        rgba(255,255,255,0.03) 0%, 
+        transparent 50%, 
+        rgba(0,0,0,0.1) 100%);
+}
+
+.upper-label {
+    display: block;        /* Permet d'appliquer des marges correctement */
+    margin-top: 5px;      /* Ajuste cette valeur pour descendre le mot plus ou moins bas */
+    margin-bottom: 3px;    /* Espace entre le mot et la trappe */
+    transition: all 0.3s;  /* Optionnel : pour un mouvement fluide si tu le modifies */
+    text-align: center;
+}
+
+.vu-sense-group {
+    display: block;        /* Permet d'appliquer des marges correctement */
+    margin-top: 30px;      /* Ajuste cette valeur pour descendre le mot plus ou moins bas */
+    margin-bottom: -10px;    /* Espace entre le mot et la trappe */
+    transition: all 0.3s;  /* Optionnel : pour un mouvement fluide si tu le modifies */
+}
+
+.tone-controls-section {
+    width: 100%;
+    display: flex;
+    justify-content: center; /* Centre horizontalement */
+    align-items: center;
+
+    /* CONTRÔLE INDÉPENDANT DES MARGES */
+    margin-top: 10px;    /* Ajuste l'espace avec ce qui est AU-DESSUS */
+    margin-bottom: -60px; /* Ajuste l'espace avec la rangée EJECT en DESSOUS */
+    
+    /* Optionnel : si tu veux voir la zone pendant que tu règles */
+    /* border: 1px dashed rgba(255,255,255,0.1); */
+}
+
+/* Aligne les deux groupes Bass et Treble sur une ligne */
+.tone-controls-row {
+    display: flex;
+    gap: 60px; /* Espace généreux entre Bass et Treble pour la clarté */
+}
+
+/* Centre le texte au-dessus des boutons */
+.tone-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px; /* Espace entre le mot et les boutons */
+}
+
+.tone-group-wrapper .upper-label {
+    display: block !important; /* Force l'élément à se comporter comme un bloc */
+    position: relative !important; /* Permet d'utiliser top/bottom */
+    top: 5px !important; /* Ajuste cette valeur : 20px pour descendre, -20px pour monter */
+    text-align: center;
+    width: 100%;
+}
+
+/* Style des boutons de tonalité */
+.btn-tone {
+    width: 90px !important;
+    height: 45px !important;
+    font-size: 11px !important;
+    min-width: 0 !important;
+    flex: none !important;
+}
+
+.btn-group {
+    display: flex;
+    gap: 10px;
+}
+
+
+.tone-group-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.tone-hatch-frame {
+    width: 580px; /* Un peu plus large pour contenir les 4 boutons */
+    height: 65px;
+    background: #0a0a0a;
+    border: 2px solid #000;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.9);
+    margin-top: 10px;
+}
+
+#tone-hatch-block {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, #1a1a1b 0%, #151516 100%);
+    border: 2px solid #000;
+    border-top-color: #333; /* Reflet identique au tiroir CD */
+    box-sizing: border-box;
+    z-index: 20;
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#tone-hatch-block.hatch-open {
+    transform: translateY(62px); /* Glisse vers le bas */
+}
+
+/* On ajuste l'alignement des boutons derrière la trappe */
+.tone-controls-row {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 100%;
+    padding: 0 10px;
+}
+
+.label-tiny {
+    font-size: 9px;
+    color: #555;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.hatch-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    
+    font-size: 10px;
+    letter-spacing: 1px;
+    font-weight: bold;
+    
+    color: #9aa0a5;
+    text-shadow:
+        0 1px 0 #000,
+        0 0 4px rgba(120, 160, 180, 0.25);
+
+    pointer-events: none;
+    user-select: none;
+    opacity: 0.9;
+}
+
+/* Quand la trappe est ouverte, on masque le texte */
+.hatch-open .hatch-label {
+    transition: all 0.6s ease-in-out;
+}
+
+</style>
+		
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+</head>
+<body>
+
+    <div id="art-modal" onclick="this.style.display='none'">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <img id="art-image" src="img/favicon.png" alt="Album Art">
+            <div id="art-info">Technics - HiRes - Player</div>
+        </div>
+    </div>
+
+    <div id="playlist-modal" onclick="this.style.display='none'">
+        <div class="modal-content list-content" onclick="event.stopPropagation()">
+            <h3 style="color:var(--vfd-blue); margin-top:0; letter-spacing:2px;">TRACK LIST</h3>
+            <div id="track-list-container"></div>
+            <button class="btn" style="margin-top:20px; height:35px; width:100px; margin-left:auto; margin-right:auto;" onclick="document.getElementById('playlist-modal').style.display='none'">CLOSE</button>
+        </div>
+    </div>
+
+    <div class="deck-container">
+        <img src="img/HR_logo.png" class="hr-logo-bottom" alt="High Resolution Audio Player">
+
+   
+
+ 	<header class="brand-header">
+		<a href="#" id="vfd-color-trigger" class="invisible-link" title="Change Display Color">
+                <img src="img/Technics_logo.png" class="main-logo" alt="Technics">
+            	</a>		
+                <div class="model-name">High Resolution Audio Player</div> 
+        </header>
+
+
+
+        <div class="tray-outer-slot">
+            <div id="tray-front" class="tray-mechanism">
+                <img src="img/mash_logo_t.png" alt="MASH Logo" class="mash-logo-tray">
+            </div>
+            <div style="position:absolute; width:100%; height:100%; display:flex; justify-content:center; align-items:center;">
+                <input type="file" id="file-input" multiple style="display:none">
+                <label for="file-input" style="color:#a0a0a0; cursor:pointer; font-weight:bold; letter-spacing:3px;">● SELECT FILES ●</label>
+            </div>
+        </div>
+
+        <div class="main-interface">
+            <div class="power-section">
+                <span class="upper-label">POWER</span>
+                <button class="btn" id="power-reset-btn"></button>
+            </div>
+
+            <div class="display-and-controls">
+                <section class="display-panel">
+                    <div class="vfd-main-row">
+                        <div class="vfd-col-track">
+                            <span class="label-vfd clickable" id="track-label" onclick="openArt()">Track</span>
+                            <div class="digital-counter">
+                                <span id="t-d1" class="digit">0</span><span id="t-d2" class="digit">0</span>
+                                <span id="file-format-display" class="file-format" onclick="openArt()">---</span>
+                            </div>
+                        </div>
+
+                        <div class="vfd-col-indicators">
+                            <div id="vfd-random" class="vfd-indicator">Random</div>
+                            <div id="vfd-repeat-1" class="vfd-indicator">Repeat 1</div>
+                            <div id="vfd-repeat-all" class="vfd-indicator">Repeat All</div>
+                            <div id="vfd-ab" class="vfd-indicator">A-B</div>
+                            <div id="vfd-ab-lock" class="vfd-indicator">A-B LOCK</div>
+                        </div>
+
+                        <div class="vfd-col-time">
+                            <span class="label-vfd" id="time-label">Min : Sec</span>
+                            <div class="digital-counter" id="main-time-display">
+                                <span id="m-d1" class="digit">0</span><span id="m-d2" class="digit">0</span>
+                                <span class="time-separator" id="time-sep">:</span>
+                                <span id="s-d1" class="digit">0</span><span id="s-d2" class="digit">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="track-grid" onclick="openPlaylist()" style="cursor:pointer">
+                        <div id="grid-numbers-wrapper" style="display: flex; gap: 10px; align-items: center;"></div>
+                        <div id="over-arrow" class="arrow-indicator">▶</div>
+                    </div>
+
+                    <div class="vu-meters" id="vu-meters-container">
+                        <div class="vu-row"><span class="vu-label on" id="lbl-L">L</span><div class="meter-container" id="meter-L"></div></div>
+                        <div class="vu-row"><span class="vu-label on" id="lbl-R">R</span><div class="meter-container" id="meter-R"></div></div>
+                    </div>
+                </section>
+
+                <div class="numeric-grid">
+                    <button class="btn" onclick="handleNumKey(1)">1</button>
+                    <button class="btn" onclick="handleNumKey(2)">2</button>
+                    <button class="btn" onclick="handleNumKey(3)">3</button>
+                    <button class="btn" onclick="handleNumKey(4)">4</button>
+                    <button class="btn" onclick="handleNumKey(5)">5</button>
+                    <button class="btn" onclick="handleNumKey(6)">6</button>
+                    <button class="btn" onclick="handleNumKey(7)">7</button>
+                    <button class="btn" onclick="handleNumKey(8)">8</button>
+                    <button class="btn" onclick="handleNumKey(9)">9</button>
+                    <button class="btn" onclick="handleNumKey(0)">0</button>
+                </div>
+       <div class="tone-controls-section">
+    <div class="tone-group-wrapper">
+        <div class="tone-hatch-frame" onclick="toggleToneHatch()">
+            <div id="tone-hatch-block" class="hatch-closed">
+                <div class="hatch-texture"></div>
+                <span class="hatch-label">TONE CONTROL</span>
+            </div>
+            <div class="tone-controls-row">
+                <div class="tone-group">
+                    <span class="label-tiny">BASS</span>
+                    <div class="btn-group">
+                        <button class="btn btn-tone" 
+                            onmouseenter="showToneDisplay('BASS', bassLevel)" 
+                            onmouseleave="startToneTimeout()" 
+                            onclick="event.stopPropagation(); adjustBass(-1)">Bass -</button>
+                        <button class="btn btn-tone" 
+                            onmouseenter="showToneDisplay('BASS', bassLevel)" 
+                            onmouseleave="startToneTimeout()" 
+                            onclick="event.stopPropagation(); adjustBass(1)">Bass +</button>
+                    </div>
+                </div>
+
+                <div class="tone-group">
+                    <span class="label-tiny">TREBLE</span>
+                    <div class="btn-group">
+                        <button class="btn btn-tone" 
+                            onmouseenter="showToneDisplay('TREBLE', trebleLevel)" 
+                            onmouseleave="startToneTimeout()" 
+                            onclick="event.stopPropagation(); adjustTreble(-1)">Treble -</button>
+                        <button class="btn btn-tone" 
+                            onmouseenter="showToneDisplay('TREBLE', trebleLevel)" 
+                            onmouseleave="startToneTimeout()" 
+                            onclick="event.stopPropagation(); adjustTreble(1)">Treble +</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+                <div class="transport-grid">
+                    <div class="eject-section">
+                        <span class="upper-label">OPEN/CLOSE</span>
+                        <button class="btn" id="eject-btn">⏏</button>
+                    </div>
+                    <div class="eject-section">
+                        <span class="upper-label">PREV</span>
+                    <button class="btn" id="prev-btn">|◀◀</button>
+                        </div>
+                        <div class="eject-section">
+                        <span class="upper-label">PLAY/PAUSE</span>
+                    <button class="btn" id="play-btn">▶ / ||</button>
+                            </div>
+                        <div class="eject-section">
+                        <span class="upper-label">NEXT</span>
+                    <button class="btn" id="next-btn">▶▶|</button>
+                    </div>
+                    <div class="eject-section">
+                        <span class="upper-label">STOP</span>
+                    <button class="btn" id="stop-btn">■</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls-right-stack">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <button class="btn" id="rew-btn">◀◀</button>
+                    <button class="btn" id="fwd-btn">▶▶</button>
+                    <button class="btn" id="minus-10-btn">- 10s</button>
+                    <button class="btn" id="plus-10-btn">+ 10s</button>
+                    <button class="btn" id="random-btn">Random</button>
+                    <button class="btn" id="repeat-btn">Repeat</button>
+                    <button class="btn" id="ab-btn">A - B</button>
+                    <button class="btn" id="peak-btn">Peak</button>
+                    <button class="btn" id="time-btn">Time Mode</button>
+                    <button class="btn" id="vu-btn">VU</button>
+                </div>
+                
+                
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 50px;">
+                    <span class="volume-label">VOLUME</span>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn" id="vol-down-btn">VOL -</button>
+                        <button class="btn" id="mute-btn">MUTE</button>
+                        <button class="btn" id="vol-up-btn">VOL +</button>
+                    </div>
+                    <div class="vu-sense-group">
+    
+    
+    <div class="vu-hatch-frame" onclick="toggleVUHatch()">
+        <div id="vu-hatch-block" class="hatch-closed">
+            <div class="hatch-texture"></div>
+            <span class="hatch-label">VU SENSE</span>
+        </div>
+        
+        <div class="vu-controls-container">
+            <button class="btn" id="vu-down-btn" 
+                onmouseenter="showVUSense()" 
+                onmouseleave="startVUTimeout()" 
+                onclick="event.stopPropagation(); adjustVUSense(-0.2)">VU -</button>
+            <button class="btn" id="vu-up-btn" 
+                onmouseenter="showVUSense()" 
+                onmouseleave="startVUTimeout()" 
+                onclick="event.stopPropagation(); adjustVUSense(0.2)">VU +</button>
+        </div>
+    </div>
+</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script> 
+		
+		const audio = new Audio();
+audio.crossOrigin = "anonymous";
+let playlist = [], currentIndex = 0;
+let currentArt = "img/Technics_cover.png", currentMeta = "Technics - HiRes - Audio Player";
+let repeatMode = 0, isRandom = false, timeMode = 0, isVUOn = true;
+let pointA = null, pointB = null, isPeakSearching = false;
+let inputBuffer = "", inputTimeout = null, volDisplayTimeout = null;
+let audioCtx, analyzer, dataArray, searchInterval = null;
+let preMuteVolume = 0.02;
+let isMuted = false;
+let volRepeatInterval = null;
+let vuMultiplier = 1.0;
+let bassFilter, trebleFilter;
+let bassLevel = 0;   
+let trebleLevel = 0;
+let userPaused = false;
+let isABLocked = false;
+
+const gridWrapper = document.getElementById('grid-numbers-wrapper');
+for(let i=1; i<=20; i++) {
+    const s = document.createElement('span'); 
+    s.className='grid-num'; 
+    s.id=`gn-${i}`; 
+    s.innerText=i; 
+    gridWrapper.appendChild(s);
+}
+
+function showVolumeDisplay() {
+    if (volDisplayTimeout) clearTimeout(volDisplayTimeout);
+    const timeLabel = document.getElementById('time-label');
+    const timeSep = document.getElementById('time-sep');
+    
+    if (isMuted) {
+        timeLabel.innerText = "MUTE";
+        document.getElementById('m-d1').innerText = " ";
+        document.getElementById('m-d2').innerText = " ";
+        document.getElementById('s-d1').innerText = "0";
+        document.getElementById('s-d2').innerText = "0";
+    } else {
+        timeLabel.innerText = "VOLUME";
+        let volPerc = Math.round(audio.volume * 100); 
+        if (volPerc > 99) volPerc = 99; 
+        const s = volPerc.toString().padStart(2, '0');
+        document.getElementById('m-d1').innerText = " ";
+        document.getElementById('m-d2').innerText = " ";
+        document.getElementById('s-d1').innerText = s[0];
+        document.getElementById('s-d2').innerText = s[1];
+    }
+    timeSep.style.opacity = "0";
+}
+
+function hideVolumeDisplay() {
+    if (isMuted) return;
+    if (volDisplayTimeout) clearTimeout(volDisplayTimeout);
+    const timeLabel = document.getElementById('time-label');
+    const timeSep = document.getElementById('time-sep');
+    timeLabel.innerText = timeMode === 0 ? "Min : Sec" : "- Min : Sec";
+    timeSep.style.opacity = "1";
+    updateTimeDisplay();
+}
+
+const volUp = document.getElementById('vol-up-btn');
+const volDown = document.getElementById('vol-down-btn');
+const muteBtn = document.getElementById('mute-btn');
+
+[volUp, volDown].forEach(btn => {
+    btn.onmouseenter = showVolumeDisplay;
+    btn.onmouseleave = () => {
+        stopVolRepeat();
+        hideVolumeDisplay();
+    };
+});
+
+function startVolRepeat(dir) {
+    stopVolRepeat();
+    isMuted = false;
+    const adjust = () => {
+        let step = 0.01;
+        let newVol = dir === 1 ? audio.volume + step : audio.volume - step;
+        audio.volume = Math.max(0, Math.min(1, Math.round(newVol * 100) / 100));
+        showVolumeDisplay();
+    };
+    adjust();
+    volRepeatInterval = setInterval(adjust, 300);
+}
+
+function stopVolRepeat() {
+    if (volRepeatInterval) {
+        clearInterval(volRepeatInterval);
+        volRepeatInterval = null;
+    }
+}
+
+volUp.onmousedown = () => startVolRepeat(1);
+volUp.onmouseup = stopVolRepeat;
+volDown.onmousedown = () => startVolRepeat(-1);
+volDown.onmouseup = stopVolRepeat;
+
+muteBtn.onclick = () => {
+    if (!isMuted) {
+        preMuteVolume = audio.volume;
+        audio.volume = 0;
+        isMuted = true;
+        showVolumeDisplay();
+    } else {
+        audio.volume = preMuteVolume;
+        isMuted = false;
+        hideVolumeDisplay();
+    }
+};
+
+function startSearch(dir) {
+    // Bloque si le mode A-B est en cours ou verrouillé
+    if (isABActive() || checkLock()) return; 
+    
+    if (!playlist.length || isPeakSearching) return;
+    audio.muted = true;
+    searchInterval = setInterval(() => {
+        audio.currentTime = Math.max(0, Math.min(audio.duration, audio.currentTime + (dir * 2)));
+        updateTimeDisplay();
+    }, 100);
+}
+
+function stopSearch() {
+    if (searchInterval) {
+        clearInterval(searchInterval);
+        searchInterval = null;
+        audio.muted = false;
+    }
+}
+
+document.getElementById('fwd-btn').onmousedown = () => startSearch(1);
+document.getElementById('fwd-btn').onmouseup = stopSearch;
+document.getElementById('rew-btn').onmousedown = () => startSearch(-1);
+document.getElementById('rew-btn').onmouseup = stopSearch;
+
+// Bouton +10
+document.getElementById('plus-10-btn').onclick = () => {
+    if (isABActive() || checkLock()) return; // Bloqué en mode A-B
+    if (!playlist.length) return;
+    audio.currentTime = Math.min(audio.duration, audio.currentTime + 10);
+    updateTimeDisplay();
+};
+
+// Bouton -10
+document.getElementById('minus-10-btn').onclick = () => {
+    if (isABActive() || checkLock()) return; // Bloqué en mode A-B
+    if (!playlist.length) return;
+    audio.currentTime = Math.max(0, audio.currentTime - 10);
+    updateTimeDisplay();
+};
+
+document.getElementById('peak-btn').onclick = async () => {
+    if (!playlist.length || isPeakSearching) return;
+    isPeakSearching = true; audio.pause();
+    const timeLabel = document.getElementById('time-label');
+    const originalLabel = timeLabel.innerText;
+    timeLabel.innerText = "PEAK SEARCH";
+    document.getElementById('main-time-display').classList.add('vfd-input-blink');
+    let maxVal = 0, peakTime = 0;
+    const step = audio.duration / 50;
+    for(let i=0; i < 50; i++) {
+        audio.currentTime = i * step;
+        await new Promise(r => setTimeout(r, 40));
+        analyzer.getByteFrequencyData(dataArray);
+        let currentMax = Math.max(...dataArray);
+        if(currentMax > maxVal) { maxVal = currentMax; peakTime = audio.currentTime; }
+    }
+    audio.currentTime = peakTime;
+    document.getElementById('main-time-display').classList.remove('vfd-input-blink');
+    timeLabel.innerText = "PEAK FOUND";
+    const simulatedVal = Math.floor((maxVal / 255) * 40);
+    ['meter-L', 'meter-R'].forEach(id => {
+        const el = document.getElementById(id);
+        for (let i = 0; i < simulatedVal; i++) el.children[i].className = 'meter-segment' + (i > 34 ? ' on-red' : ' on-blue');
+    });
+    setTimeout(() => { timeLabel.innerText = originalLabel; isPeakSearching = false; updateTimeDisplay(); }, 2000);
+};
+
+document.getElementById('vu-btn').onclick = () => {
+    isVUOn = !isVUOn;
+    const labels = [document.getElementById('lbl-L'), document.getElementById('lbl-R')];
+    if (!isVUOn) {
+        labels.forEach(l => l.className = 'vu-label');
+        ['meter-L', 'meter-R'].forEach(id => {
+            const el = document.getElementById(id);
+            for (let i = 0; i < 40; i++) el.children[i].className = 'meter-segment';
+        });
+    } else labels.forEach(l => l.className = 'vu-label on');
+};
+
+document.getElementById('ab-btn').onclick = () => {
+    if (playlist.length === 0) return;
+    const abVfd = document.getElementById('vfd-ab');
+    const abLockVfd = document.getElementById('vfd-ab-lock');
+
+    if (pointA === null) { 
+        pointA = audio.currentTime; 
+        abVfd.classList.add('active', 'vfd-input-blink'); 
+    } else if (pointB === null) {
+        if (audio.currentTime > pointA) { 
+            pointB = audio.currentTime; 
+            abVfd.classList.remove('vfd-input-blink'); 
+            abVfd.classList.add('active'); 
+            
+            // ACTIVATION DU BLOCAGE
+            isABLocked = true; 
+            if (abLockVfd) abLockVfd.classList.add('active'); 
+            
+            audio.currentTime = pointA; 
+        }
+    } else { 
+        // DÉSACTIVATION DU BLOCAGE
+        pointA = null; 
+        pointB = null; 
+        isABLocked = false;
+        abVfd.classList.remove('active', 'vfd-input-blink');
+        if (abLockVfd) abLockVfd.classList.remove('active'); 
+    }
+};
+
+function isABActive() { return pointA !== null; }
+
+document.getElementById('power-reset-btn').onclick = () => {
+    // 1. Arrêt audio et nettoyage
+    audio.pause(); 
+    audio.src = ""; 
+    audio.removeAttribute('src'); 
+    audio.volume = 0.02;
+    
+    // 2. Réinitialisation des variables
+    playlist = []; 
+    currentIndex = 0; 
+    pointA = null; 
+    pointB = null; 
+    isMuted = false;
+    isABLocked = false; // Ne pas oublier de déverrouiller aussi
+    
+    // 3. Nettoyage de l'interface VFD
+    document.querySelectorAll('.vfd-indicator').forEach(el => el.classList.remove('active', 'vfd-input-blink'));
+    document.getElementById('main-time-display').classList.remove('vfd-blink-pause');
+    
+    // --- CORRECTION : On vide l'affichage du format de fichier ---
+    const formatDisplay = document.getElementById('file-format-display');
+    if (formatDisplay) formatDisplay.innerText = "";
+
+    // 4. Reset des compteurs et de la grille
+    updateDig('t', 0); 
+    updateGrid();
+    
+    // 5. Ouverture du tiroir et affichage volume temporaire
+    document.getElementById('tray-front').classList.add('open');
+    showVolumeDisplay();
+    setTimeout(hideVolumeDisplay, 2000);
+};
+
+document.getElementById('play-btn').onclick = () => {
+    if (checkLock()) return; // Bloqué si A-B LOCK est actif
+    
+    if (!playlist.length || isPeakSearching) return;
+    const timeDisplay = document.getElementById('main-time-display');
+    
+    if (audio.paused) {
+        audio.play();
+        timeDisplay.classList.remove('vfd-blink-pause');
+    } else {
+        audio.pause();
+        timeDisplay.classList.add('vfd-blink-pause');
+    }
+};
+
+document.getElementById('stop-btn').onclick = () => {
+    if (checkLock()) return; // Bloqué si A-B LOCK est actif
+    
+    audio.pause();
+    audio.currentTime = 0;
+    document.getElementById('main-time-display').classList.remove('vfd-blink-pause');
+    updateTimeDisplay();
+};
+
+function updateDig(prefix, val) {
+    const s = Math.floor(Math.abs(val)).toString().padStart(2, '0');
+    document.getElementById(`${prefix}-d1`).innerText = s[s.length-2] || "0";
+    document.getElementById(`${prefix}-d2`).innerText = s[s.length-1] || "0";
+}
+
+function updateTimeDisplay() {
+    const timeLabel = document.getElementById('time-label');
+    if(timeLabel.innerText === "VOLUME" || timeLabel.innerText === "MUTE" || timeLabel.innerText === "VU SENSE" || timeLabel.innerText === "BASS" || 
+       timeLabel.innerText === "TREBLE" ||isPeakSearching) return; 
+    let d = timeMode === 0 ? audio.currentTime : (audio.duration || 0) - audio.currentTime;
+    const mins = Math.floor(d / 60).toString().padStart(2, '0'), secs = Math.floor(d % 60).toString().padStart(2, '0');
+    document.getElementById('m-d1').innerText = mins[mins.length-2] || "0";
+    document.getElementById('m-d2').innerText = mins[mins.length-1] || "0";
+    document.getElementById('s-d1').innerText = secs[secs.length-2] || "0";
+    document.getElementById('s-d2').innerText = secs[secs.length-1] || "0";
+}
+
+function updateGrid() {
+    const overArrow = document.getElementById('over-arrow');
+    const hasMoreThan20 = playlist.length > 20;
+    const isCurrentTrackOver20 = (currentIndex + 1) > 20;
+
+    if (overArrow) {
+        // 1. On l'affiche si la playlist est longue
+        overArrow.classList.toggle('active', hasMoreThan20);
+        
+        // 2. On fait clignoter SEULEMENT si la piste actuelle est > 20
+        if (isCurrentTrackOver20) {
+            overArrow.classList.add('vfd-input-blink');
+        } else {
+            overArrow.classList.remove('vfd-input-blink');
+        }
+    }
+
+    // Gestion des chiffres 1 à 20
+    for(let i=1; i<=20; i++) {
+        const el = document.getElementById(`gn-${i}`);
+        if (el) {
+            el.classList.toggle('loaded', i <= playlist.length);
+            el.classList.toggle('active-track', i === currentIndex + 1 && playlist.length > 0);
+        }
+    }
+}
+
+function updateMediaSession() {
+    if ('mediaSession' in navigator && playlist.length > 0) {
+        const currentFile = playlist[currentIndex];
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: currentFile.name.replace(/\.[^/.]+$/, ""),
+            artist: "Technics SL-PS740A",
+            album: "Compact Disc Digital Audio",
+            artwork: [{ src: currentArt, sizes: '512x512', type: 'image/png' }]
+        });
+    }
+}
+
+// LOGIQUE DE CHARGEMENT PRINCIPALE
+function loadTrack(idx, forcePlay = false) {
+    if (!playlist.length) return;
+    const timeDisplay = document.getElementById('main-time-display');
+    
+    // Déterminer l'état AVANT de changer la source
+    const isAfterReset = (audio.src === "" || !audio.getAttribute('src'));
+    const wasPlaying = !audio.paused && !timeDisplay.classList.contains('vfd-blink-pause');
+
+    if (isRandom && idx !== currentIndex) {
+        idx = Math.floor(Math.random() * playlist.length);
+    }
+    
+    currentIndex = (idx + playlist.length) % playlist.length;
+    const currentFile = playlist[currentIndex];
+    
+    if (audio.src) URL.revokeObjectURL(audio.src);
+    audio.src = URL.createObjectURL(currentFile);
+    
+    const formatDisplay = document.getElementById('file-format-display');
+    if (formatDisplay && currentFile.name) {
+        formatDisplay.innerText = currentFile.name.split('.').pop().toUpperCase();
+    }
+    updateDig('t', currentIndex + 1);
+    updateGrid(); 
+
+    // LOGIQUE DE LECTURE :
+    // On joue si : forcePlay (Auto-next) OU Reset Power OU On était déjà en lecture
+    if (forcePlay || isAfterReset || wasPlaying) {
+        audio.play().then(() => {
+            timeDisplay.classList.remove('vfd-blink-pause');
+        }).catch(e => console.log("Playback error:", e));
+    } else {
+        // Sinon (Next/Prev manuel en pause) -> On reste en pause
+        audio.pause();
+        audio.currentTime = 0;
+        timeDisplay.classList.add('vfd-blink-pause');
+        updateTimeDisplay();
+    }
+
+    updateMediaSession();
+    setupAudio(); 
+    extractMetadata(playlist[currentIndex]);
+}
+
+if ('mediaSession' in navigator) {
+    navigator.mediaSession.setActionHandler('play', () => document.getElementById('play-btn').click());
+    navigator.mediaSession.setActionHandler('pause', () => document.getElementById('play-btn').click());
+    navigator.mediaSession.setActionHandler('previoustrack', () => loadTrack(currentIndex - 1));
+    navigator.mediaSession.setActionHandler('nexttrack', () => loadTrack(currentIndex + 1));
+    navigator.mediaSession.setActionHandler('stop', () => document.getElementById('stop-btn').click());
+}
+
+audio.onended = () => {
+    if (isABActive()) return;
+    if (repeatMode === 1) {
+        audio.play();
+    } else if (repeatMode === 2 || isRandom || currentIndex < playlist.length - 1) {
+        // On force la lecture (forcePlay = true) pour l'enchaînement automatique
+        loadTrack(currentIndex + 1, true);
+    } else {
+        audio.pause();
+        audio.currentTime = 0;
+        updateTimeDisplay();
+    }
+};
+
+audio.ontimeupdate = () => {
+    if (pointA !== null && pointB !== null && audio.currentTime >= pointB) audio.currentTime = pointA;
+    updateTimeDisplay();
+};
+
+function handleNumKey(num) {
+    if (checkLock()) return; // <--- AJOUT ICI
+    if (!playlist.length) return;
+    const tDisplay = document.getElementById('t-d1').parentElement;
+    if (inputTimeout) { clearTimeout(inputTimeout); inputTimeout = null; }
+    if (isABActive()) {
+        updateDig('t', currentIndex + 1);
+        tDisplay.classList.add('vfd-input-blink');
+        setTimeout(() => tDisplay.classList.remove('vfd-input-blink'), 800);
+        inputBuffer = ""; return;
+    }
+    inputBuffer += num;
+    tDisplay.classList.add('vfd-input-blink');
+    updateDig('t', parseInt(inputBuffer));
+    if (inputBuffer.length >= 2) executeJump();
+    else inputTimeout = setTimeout(() => executeJump(), 2000);
+}
+
+function executeJump() {
+    const tDisplay = document.getElementById('t-d1').parentElement;
+    tDisplay.classList.remove('vfd-input-blink');
+    let trackNum = parseInt(inputBuffer);
+    if (inputTimeout) { clearTimeout(inputTimeout); inputTimeout = null; }
+    inputBuffer = "";
+    if (isABActive()) { updateDig('t', currentIndex + 1); return; }
+    if (!isNaN(trackNum) && trackNum > 0 && trackNum <= playlist.length) loadTrack(trackNum - 1);
+    else updateDig('t', currentIndex + 1);
+}
+
+function extractMetadata(file) {
+    jsmediatags.read(file, {
+        onSuccess: (tag) => {
+            const t = tag.tags;
+            currentMeta = `${t.artist || "Unknown Artist"} - ${t.album || "Unknown Album"} - ${t.title || file.name}`;
+            const p = t.picture;
+            if (p) {
+                let b64 = ""; for(let i=0; i<p.data.length; i++) b64 += String.fromCharCode(p.data[i]);
+                currentArt = `data:${p.format};base64,${window.btoa(b64)}`;
+            } else currentArt = "img/Technics_cover.png";
+            updateMediaSession();
+        }
+    });
+}
+
+function openPlaylist() {
+    if (playlist.length === 0) return;
+    const container = document.getElementById('track-list-container');
+    container.innerHTML = "";
+    playlist.forEach((file, idx) => {
+        const item = document.createElement('div');
+        item.className = 'track-item' + (idx === currentIndex ? ' active' : '');
+        item.innerText = `${(idx + 1).toString().padStart(2, '0')}. ${file.name}`;
+        item.onclick = () => { loadTrack(idx); document.getElementById('playlist-modal').style.display = 'none'; };
+        container.appendChild(item);
+    });
+    document.getElementById('playlist-modal').style.display = 'flex';
+}
+
+document.getElementById('file-input').onchange = (e) => { 
+    playlist = Array.from(e.target.files); 
+    if(playlist.length) { 
+        document.getElementById('tray-front').classList.remove('open'); 
+        loadTrack(0); 
+        updateGrid();
+    }
+};
+
+document.getElementById('next-btn').onclick = () => {
+    if (checkLock()) return; // Bloqué si A-B LOCK est actif
+    
+    if (isABActive()) return; // Bloqué aussi si on définit le point A
+    loadTrack(currentIndex + 1);
+};
+
+document.getElementById('prev-btn').onclick = () => {
+    if (checkLock()) return; // Bloqué si A-B LOCK est actif
+    
+    if (isABActive()) return; // Bloqué aussi si on définit le point A
+    loadTrack(currentIndex - 1);
+};
+
+document.getElementById('eject-btn').onclick = () => document.getElementById('tray-front').classList.toggle('open');
+document.getElementById('random-btn').onclick = () => { 
+    isRandom = !isRandom; 
+    document.getElementById('vfd-random').classList.toggle('active', isRandom); 
+};
+document.getElementById('repeat-btn').onclick = () => { 
+    repeatMode = (repeatMode + 1) % 3;
+    document.getElementById('vfd-repeat-1').classList.toggle('active', repeatMode === 1);
+    document.getElementById('vfd-repeat-all').classList.toggle('active', repeatMode === 2);
+};
+
+document.getElementById('time-btn').onclick = () => { 
+    timeMode = (timeMode + 1) % 2; 
+    const label = document.getElementById('time-label');
+    label.innerText = (timeMode === 0) ? "Min : Sec" : "- Min : Sec";
+    updateTimeDisplay();
+};
+
+function openArt() { 
+    document.getElementById('art-image').src = currentArt; 
+    document.getElementById('art-info').innerText = currentMeta;
+    document.getElementById('art-modal').style.display = 'flex'; 
+}
+
+function setupAudio() {
+    if (audioCtx && audioCtx.state === "suspended") { audioCtx.resume(); return; }
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const src = audioCtx.createMediaElementSource(audio);
+    bassFilter = audioCtx.createBiquadFilter();
+    bassFilter.type = "lowshelf";
+    bassFilter.frequency.value = 200;
+    bassFilter.gain.value = bassLevel;
+    trebleFilter = audioCtx.createBiquadFilter();
+    trebleFilter.type = "highshelf";
+    trebleFilter.frequency.value = 3000;
+    trebleFilter.gain.value = trebleLevel;
+    analyzer = audioCtx.createAnalyser(); 
+    analyzer.fftSize = 64;
+    dataArray = new Uint8Array(analyzer.frequencyBinCount);
+    src.connect(bassFilter);
+    bassFilter.connect(trebleFilter);
+    trebleFilter.connect(analyzer);
+    analyzer.connect(audioCtx.destination);
+    renderVU();
+}
+
+function renderVU() {
+    requestAnimationFrame(renderVU);
+    if (!analyzer || !isVUOn || isPeakSearching) return;
+    analyzer.getByteFrequencyData(dataArray);
+    ['meter-L', 'meter-R'].forEach((id, idx) => {
+        const el = document.getElementById(id);
+        let rawVal = dataArray[idx + 2] * vuMultiplier; 
+        const val = Math.floor((rawVal / 255) * 40);
+        for (let i = 0; i < 40; i++) {
+            el.children[i].className = 'meter-segment' + (i < val ? (i > 34 ? ' on-red' : ' on-blue') : '');
+        }
+    });
+}
+
+['meter-L', 'meter-R'].forEach(id => {
+    const el = document.getElementById(id);
+    for(let i=0; i<40; i++) el.appendChild(document.createElement('div')).className = 'meter-segment';
+});
+
+audio.volume = 0.02;
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('PWA Service Worker Registered'))
+            .catch(err => console.log('Service Worker Error', err));
+    });
+}
+
+function showVUSense() {
+    if (volDisplayTimeout) clearTimeout(volDisplayTimeout);
+    const timeLabel = document.getElementById('time-label');
+    const timeSep = document.getElementById('time-sep');
+    timeLabel.innerText = "VU SENSE";
+    timeSep.style.opacity = "0";
+    let displayVal = Math.round(vuMultiplier * 10).toString().padStart(2, '0');
+    document.getElementById('m-d1').innerText = " ";
+    document.getElementById('m-d2').innerText = " ";
+    document.getElementById('s-d1').innerText = displayVal[0];
+    document.getElementById('s-d2').innerText = displayVal[1];
+}
+
+function adjustVUSense(change) {
+    vuMultiplier += change;
+    if (vuMultiplier < 0.2) vuMultiplier = 0.2;
+    if (vuMultiplier > 8.0) vuMultiplier = 8.0;
+    showVUSense();
+}
+
+function startVUTimeout() {
+    if (volDisplayTimeout) clearTimeout(volDisplayTimeout);
+    volDisplayTimeout = setTimeout(hideVolumeDisplay, 1500);
+}
+
+function toggleVUHatch() {
+    const hatch = document.getElementById('vu-hatch-block');
+    hatch.classList.toggle('hatch-open');
+    hatch.classList.toggle('hatch-closed');
+}
+
+function adjustBass(change) {
+    bassLevel = Math.max(-10, Math.min(10, bassLevel + change));
+    if (bassFilter) bassFilter.gain.setTargetAtTime(bassLevel, audioCtx.currentTime, 0.01);
+    showToneDisplay("BASS", bassLevel);
+}
+
+function adjustTreble(change) {
+    trebleLevel = Math.max(-10, Math.min(10, trebleLevel + change));
+    if (trebleFilter) trebleFilter.gain.setTargetAtTime(trebleLevel, audioCtx.currentTime, 0.01);
+    showToneDisplay("TREBLE", trebleLevel);
+}
+
+function showToneDisplay(label, value) {
+    if (volDisplayTimeout) clearTimeout(volDisplayTimeout);
+    const timeLabel = document.getElementById('time-label');
+    const timeSep = document.getElementById('time-sep');
+    timeLabel.innerText = label;
+    timeSep.style.opacity = "0";
+    const sign = value >= 0 ? "+" : "-";
+    const valStr = Math.abs(value).toString().padStart(2, '0');
+    document.getElementById('m-d1').innerText = sign;
+    document.getElementById('m-d2').innerText = " ";
+    document.getElementById('s-d1').innerText = valStr[0];
+    document.getElementById('s-d2').innerText = valStr[1];
+    volDisplayTimeout = setTimeout(hideVolumeDisplay, 1500);
+}
+
+function startToneTimeout() {
+    if (volDisplayTimeout) clearTimeout(volDisplayTimeout);
+    volDisplayTimeout = setTimeout(hideVolumeDisplay, 1500);
+}
+
+function toggleToneHatch() {
+    const hatch = document.getElementById('tone-hatch-block');
+    hatch.classList.toggle('hatch-open');
+}
+
+function checkLock(e) {
+    if (isABLocked) {
+        // On fait clignoter l'indicateur LOCK pour montrer que c'est bloqué
+        const lockIndicator = document.getElementById('vfd-ab-lock');
+        lockIndicator.classList.add('vfd-input-blink');
+        setTimeout(() => lockIndicator.classList.remove('vfd-input-blink'), 500);
+        
+        if (e) e.stopPropagation();
+        return true;
+    }
+    return false;
+}
+
+/**
+ * GESTION DES COULEURS VFD
+ */
+const vfdColors = [
+    '#40e0ff', // Blue
+    '#ffffff', // White
+    '#a0a0a0', // Silver
+    '#50ff7a', // Green
+    '#FFF703', // Yellow
+];
+
+let currentColorIndex = 0;
+
+// Fonction pour appliquer la couleur aux variables CSS
+function setGlobalVFDColor(color) {
+    const root = document.documentElement;
+    root.style.setProperty('--vfd-blue', color);
+    
+    // Crée une lueur (glow) assortie avec 40% d'opacité (hex + 66)
+    root.style.setProperty('--vfd-glow', color + '66');
+    
+    // Sauvegarde dans les préférences utilisateur
+    localStorage.setItem('technics-vfd-color', color);
+}
+
+// Initialisation au chargement
+window.addEventListener('DOMContentLoaded', () => {
+    const savedColor = localStorage.getItem('technics-vfd-color');
+    if (savedColor) {
+        setGlobalVFDColor(savedColor);
+        currentColorIndex = vfdColors.indexOf(savedColor);
+        if (currentColorIndex === -1) currentColorIndex = 0;
+    }
+});
+
+// Événement sur le logo
+document.getElementById('vfd-color-trigger').onclick = (e) => {
+    e.preventDefault(); // Empêche le comportement par défaut du lien
+    
+    // Passe à la couleur suivante
+    currentColorIndex = (currentColorIndex + 1) % vfdColors.length;
+    const nextColor = vfdColors[currentColorIndex];
+    
+    setGlobalVFDColor(nextColor);
+};
+		
+		
+		</script>
+</body>
+</html>

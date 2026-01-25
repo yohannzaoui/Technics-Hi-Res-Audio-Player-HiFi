@@ -16,6 +16,9 @@ let trebleLevel = 0;
 let userPaused = false;
 let isABLocked = false;
 
+// CORRECTION 1 : Variable pour empêcher la double connexion audio
+let isAudioConnected = false;
+
 const gridWrapper = document.getElementById('grid-numbers-wrapper');
 for(let i=1; i<=20; i++) {
     const s = document.createElement('span'); 
@@ -110,9 +113,7 @@ muteBtn.onclick = () => {
 };
 
 function startSearch(dir) {
-    // Bloque si le mode A-B est en cours ou verrouillé
     if (isABActive() || checkLock()) return; 
-    
     if (!playlist.length || isPeakSearching) return;
     audio.muted = true;
     searchInterval = setInterval(() => {
@@ -134,17 +135,15 @@ document.getElementById('fwd-btn').onmouseup = stopSearch;
 document.getElementById('rew-btn').onmousedown = () => startSearch(-1);
 document.getElementById('rew-btn').onmouseup = stopSearch;
 
-// Bouton +10
 document.getElementById('plus-10-btn').onclick = () => {
-    if (isABActive() || checkLock()) return; // Bloqué en mode A-B
+    if (isABActive() || checkLock()) return;
     if (!playlist.length) return;
     audio.currentTime = Math.min(audio.duration, audio.currentTime + 10);
     updateTimeDisplay();
 };
 
-// Bouton -10
 document.getElementById('minus-10-btn').onclick = () => {
-    if (isABActive() || checkLock()) return; // Bloqué en mode A-B
+    if (isABActive() || checkLock()) return;
     if (!playlist.length) return;
     audio.currentTime = Math.max(0, audio.currentTime - 10);
     updateTimeDisplay();
@@ -193,7 +192,6 @@ document.getElementById('ab-btn').onclick = () => {
     if (playlist.length === 0) return;
     const abVfd = document.getElementById('vfd-ab');
     const abLockVfd = document.getElementById('vfd-ab-lock');
-
     if (pointA === null) { 
         pointA = audio.currentTime; 
         abVfd.classList.add('active', 'vfd-input-blink'); 
@@ -202,18 +200,12 @@ document.getElementById('ab-btn').onclick = () => {
             pointB = audio.currentTime; 
             abVfd.classList.remove('vfd-input-blink'); 
             abVfd.classList.add('active'); 
-            
-            // ACTIVATION DU BLOCAGE
             isABLocked = true; 
             if (abLockVfd) abLockVfd.classList.add('active'); 
-            
             audio.currentTime = pointA; 
         }
     } else { 
-        // DÉSACTIVATION DU BLOCAGE
-        pointA = null; 
-        pointB = null; 
-        isABLocked = false;
+        pointA = null; pointB = null; isABLocked = false;
         abVfd.classList.remove('active', 'vfd-input-blink');
         if (abLockVfd) abLockVfd.classList.remove('active'); 
     }
@@ -222,58 +214,29 @@ document.getElementById('ab-btn').onclick = () => {
 function isABActive() { return pointA !== null; }
 
 document.getElementById('power-reset-btn').onclick = () => {
-    // 1. Arrêt audio et nettoyage
-    audio.pause(); 
-    audio.src = ""; 
-    audio.removeAttribute('src'); 
-    audio.volume = 0.02;
-    
-    // 2. Réinitialisation des variables
-    playlist = []; 
-    currentIndex = 0; 
-    pointA = null; 
-    pointB = null; 
-    isMuted = false;
-    isABLocked = false; // Ne pas oublier de déverrouiller aussi
-    
-    // 3. Nettoyage de l'interface VFD
+    audio.pause(); audio.src = ""; audio.removeAttribute('src'); audio.volume = 0.02;
+    playlist = []; currentIndex = 0; pointA = null; pointB = null; isMuted = false; isABLocked = false;
     document.querySelectorAll('.vfd-indicator').forEach(el => el.classList.remove('active', 'vfd-input-blink'));
     document.getElementById('main-time-display').classList.remove('vfd-blink-pause');
-    
-    // --- CORRECTION : On vide l'affichage du format de fichier ---
     const formatDisplay = document.getElementById('file-format-display');
     if (formatDisplay) formatDisplay.innerText = "";
-
-    // 4. Reset des compteurs et de la grille
-    updateDig('t', 0); 
-    updateGrid();
-    
-    // 5. Ouverture du tiroir et affichage volume temporaire
+    updateDig('t', 0); updateGrid();
     document.getElementById('tray-front').classList.add('open');
     showVolumeDisplay();
     setTimeout(hideVolumeDisplay, 2000);
 };
 
 document.getElementById('play-btn').onclick = () => {
-    if (checkLock()) return; // Bloqué si A-B LOCK est actif
-    
+    if (checkLock()) return;
     if (!playlist.length || isPeakSearching) return;
     const timeDisplay = document.getElementById('main-time-display');
-    
-    if (audio.paused) {
-        audio.play();
-        timeDisplay.classList.remove('vfd-blink-pause');
-    } else {
-        audio.pause();
-        timeDisplay.classList.add('vfd-blink-pause');
-    }
+    if (audio.paused) { audio.play(); timeDisplay.classList.remove('vfd-blink-pause'); }
+    else { audio.pause(); timeDisplay.classList.add('vfd-blink-pause'); }
 };
 
 document.getElementById('stop-btn').onclick = () => {
-    if (checkLock()) return; // Bloqué si A-B LOCK est actif
-    
-    audio.pause();
-    audio.currentTime = 0;
+    if (checkLock()) return;
+    audio.pause(); audio.currentTime = 0;
     document.getElementById('main-time-display').classList.remove('vfd-blink-pause');
     updateTimeDisplay();
 };
@@ -300,20 +263,10 @@ function updateGrid() {
     const overArrow = document.getElementById('over-arrow');
     const hasMoreThan20 = playlist.length > 20;
     const isCurrentTrackOver20 = (currentIndex + 1) > 20;
-
     if (overArrow) {
-        // 1. On l'affiche si la playlist est longue
         overArrow.classList.toggle('active', hasMoreThan20);
-        
-        // 2. On fait clignoter SEULEMENT si la piste actuelle est > 20
-        if (isCurrentTrackOver20) {
-            overArrow.classList.add('vfd-input-blink');
-        } else {
-            overArrow.classList.remove('vfd-input-blink');
-        }
+        overArrow.classList.toggle('vfd-input-blink', isCurrentTrackOver20);
     }
-
-    // Gestion des chiffres 1 à 20
     for(let i=1; i<=20; i++) {
         const el = document.getElementById(`gn-${i}`);
         if (el) {
@@ -335,46 +288,27 @@ function updateMediaSession() {
     }
 }
 
-// LOGIQUE DE CHARGEMENT PRINCIPALE
 function loadTrack(idx, forcePlay = false) {
     if (!playlist.length) return;
     const timeDisplay = document.getElementById('main-time-display');
-    
-    // Déterminer l'état AVANT de changer la source
     const isAfterReset = (audio.src === "" || !audio.getAttribute('src'));
     const wasPlaying = !audio.paused && !timeDisplay.classList.contains('vfd-blink-pause');
-
-    if (isRandom && idx !== currentIndex) {
-        idx = Math.floor(Math.random() * playlist.length);
-    }
-    
+    if (isRandom && idx !== currentIndex) { idx = Math.floor(Math.random() * playlist.length); }
     currentIndex = (idx + playlist.length) % playlist.length;
     const currentFile = playlist[currentIndex];
-    
     if (audio.src) URL.revokeObjectURL(audio.src);
     audio.src = URL.createObjectURL(currentFile);
-    
     const formatDisplay = document.getElementById('file-format-display');
-    if (formatDisplay && currentFile.name) {
-        formatDisplay.innerText = currentFile.name.split('.').pop().toUpperCase();
-    }
+    if (formatDisplay && currentFile.name) { formatDisplay.innerText = currentFile.name.split('.').pop().toUpperCase(); }
     updateDig('t', currentIndex + 1);
     updateGrid(); 
-
-    // LOGIQUE DE LECTURE :
-    // On joue si : forcePlay (Auto-next) OU Reset Power OU On était déjà en lecture
     if (forcePlay || isAfterReset || wasPlaying) {
-        audio.play().then(() => {
-            timeDisplay.classList.remove('vfd-blink-pause');
-        }).catch(e => console.log("Playback error:", e));
+        audio.play().then(() => { timeDisplay.classList.remove('vfd-blink-pause'); }).catch(e => console.log("Playback error:", e));
     } else {
-        // Sinon (Next/Prev manuel en pause) -> On reste en pause
-        audio.pause();
-        audio.currentTime = 0;
+        audio.pause(); audio.currentTime = 0;
         timeDisplay.classList.add('vfd-blink-pause');
         updateTimeDisplay();
     }
-
     updateMediaSession();
     setupAudio(); 
     extractMetadata(playlist[currentIndex]);
@@ -390,16 +324,9 @@ if ('mediaSession' in navigator) {
 
 audio.onended = () => {
     if (isABActive()) return;
-    if (repeatMode === 1) {
-        audio.play();
-    } else if (repeatMode === 2 || isRandom || currentIndex < playlist.length - 1) {
-        // On force la lecture (forcePlay = true) pour l'enchaînement automatique
-        loadTrack(currentIndex + 1, true);
-    } else {
-        audio.pause();
-        audio.currentTime = 0;
-        updateTimeDisplay();
-    }
+    if (repeatMode === 1) { audio.play(); } 
+    else if (repeatMode === 2 || isRandom || currentIndex < playlist.length - 1) { loadTrack(currentIndex + 1, true); } 
+    else { audio.pause(); audio.currentTime = 0; updateTimeDisplay(); }
 };
 
 audio.ontimeupdate = () => {
@@ -408,7 +335,7 @@ audio.ontimeupdate = () => {
 };
 
 function handleNumKey(num) {
-    if (checkLock()) return; // <--- AJOUT ICI
+    if (checkLock()) return;
     if (!playlist.length) return;
     const tDisplay = document.getElementById('t-d1').parentElement;
     if (inputTimeout) { clearTimeout(inputTimeout); inputTimeout = null; }
@@ -437,6 +364,7 @@ function executeJump() {
 }
 
 function extractMetadata(file) {
+    if (typeof jsmediatags === "undefined") return;
     jsmediatags.read(file, {
         onSuccess: (tag) => {
             const t = tag.tags;
@@ -475,20 +403,18 @@ document.getElementById('file-input').onchange = (e) => {
 };
 
 document.getElementById('next-btn').onclick = () => {
-    if (checkLock()) return; // Bloqué si A-B LOCK est actif
-    
-    if (isABActive()) return; // Bloqué aussi si on définit le point A
+    if (checkLock() || isABActive()) return; 
     loadTrack(currentIndex + 1);
 };
 
 document.getElementById('prev-btn').onclick = () => {
-    if (checkLock()) return; // Bloqué si A-B LOCK est actif
-    
-    if (isABActive()) return; // Bloqué aussi si on définit le point A
+    if (checkLock() || isABActive()) return; 
     loadTrack(currentIndex - 1);
 };
 
+// CORRECTION 2 : Correction de l'ID du tiroir pour correspondre au HTML
 document.getElementById('eject-btn').onclick = () => document.getElementById('tray-front').classList.toggle('open');
+
 document.getElementById('random-btn').onclick = () => { 
     isRandom = !isRandom; 
     document.getElementById('vfd-random').classList.toggle('active', isRandom); 
@@ -512,25 +438,34 @@ function openArt() {
     document.getElementById('art-modal').style.display = 'flex'; 
 }
 
+// CORRECTION 3 : Vérification isAudioConnected pour éviter l'erreur de re-connexion
 function setupAudio() {
     if (audioCtx && audioCtx.state === "suspended") { audioCtx.resume(); return; }
+    if (isAudioConnected) return; 
+
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const src = audioCtx.createMediaElementSource(audio);
+    
     bassFilter = audioCtx.createBiquadFilter();
     bassFilter.type = "lowshelf";
     bassFilter.frequency.value = 200;
     bassFilter.gain.value = bassLevel;
+    
     trebleFilter = audioCtx.createBiquadFilter();
     trebleFilter.type = "highshelf";
     trebleFilter.frequency.value = 3000;
     trebleFilter.gain.value = trebleLevel;
+    
     analyzer = audioCtx.createAnalyser(); 
     analyzer.fftSize = 64;
     dataArray = new Uint8Array(analyzer.frequencyBinCount);
+    
     src.connect(bassFilter);
     bassFilter.connect(trebleFilter);
     trebleFilter.connect(analyzer);
     analyzer.connect(audioCtx.destination);
+    
+    isAudioConnected = true;
     renderVU();
 }
 
@@ -555,14 +490,6 @@ function renderVU() {
 
 audio.volume = 0.02;
 
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-            .then(reg => console.log('PWA Service Worker Registered'))
-            .catch(err => console.log('Service Worker Error', err));
-    });
-}
-
 function showVUSense() {
     if (volDisplayTimeout) clearTimeout(volDisplayTimeout);
     const timeLabel = document.getElementById('time-label');
@@ -578,8 +505,7 @@ function showVUSense() {
 
 function adjustVUSense(change) {
     vuMultiplier += change;
-    if (vuMultiplier < 0.2) vuMultiplier = 0.2;
-    if (vuMultiplier > 8.0) vuMultiplier = 8.0;
+    vuMultiplier = Math.max(0.2, Math.min(8.0, vuMultiplier));
     showVUSense();
 }
 
@@ -621,11 +547,6 @@ function showToneDisplay(label, value) {
     volDisplayTimeout = setTimeout(hideVolumeDisplay, 1500);
 }
 
-function startToneTimeout() {
-    if (volDisplayTimeout) clearTimeout(volDisplayTimeout);
-    volDisplayTimeout = setTimeout(hideVolumeDisplay, 1500);
-}
-
 function toggleToneHatch() {
     const hatch = document.getElementById('tone-hatch-block');
     hatch.classList.toggle('hatch-open');
@@ -633,43 +554,25 @@ function toggleToneHatch() {
 
 function checkLock(e) {
     if (isABLocked) {
-        // On fait clignoter l'indicateur LOCK pour montrer que c'est bloqué
         const lockIndicator = document.getElementById('vfd-ab-lock');
         lockIndicator.classList.add('vfd-input-blink');
         setTimeout(() => lockIndicator.classList.remove('vfd-input-blink'), 500);
-        
         if (e) e.stopPropagation();
         return true;
     }
     return false;
 }
 
-/**
- * GESTION DES COULEURS VFD
- */
-const vfdColors = [
-    '#40e0ff', // Blue
-    '#ffffff', // White
-    '#a0a0a0', // Silver
-    '#50ff7a', // Green
-    '#FFF703', // Yellow
-];
-
+const vfdColors = ['#40e0ff', '#ffffff', '#a0a0a0', '#50ff7a', '#FFF703'];
 let currentColorIndex = 0;
 
-// Fonction pour appliquer la couleur aux variables CSS
 function setGlobalVFDColor(color) {
     const root = document.documentElement;
     root.style.setProperty('--vfd-blue', color);
-    
-    // Crée une lueur (glow) assortie avec 40% d'opacité (hex + 66)
     root.style.setProperty('--vfd-glow', color + '66');
-    
-    // Sauvegarde dans les préférences utilisateur
     localStorage.setItem('technics-vfd-color', color);
 }
 
-// Initialisation au chargement
 window.addEventListener('DOMContentLoaded', () => {
     const savedColor = localStorage.getItem('technics-vfd-color');
     if (savedColor) {
@@ -679,13 +582,20 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Événement sur le logo
 document.getElementById('vfd-color-trigger').onclick = (e) => {
-    e.preventDefault(); // Empêche le comportement par défaut du lien
-    
-    // Passe à la couleur suivante
+    e.preventDefault();
     currentColorIndex = (currentColorIndex + 1) % vfdColors.length;
-    const nextColor = vfdColors[currentColorIndex];
-    
-    setGlobalVFDColor(nextColor);
+    setGlobalVFDColor(vfdColors[currentColorIndex]);
 };
+
+function resetToneDefault() {
+    bassLevel = 0;
+    trebleLevel = 0;
+    
+    // Application aux filtres audio
+    if (bassFilter) bassFilter.gain.setTargetAtTime(0, audioCtx.currentTime, 0.01);
+    if (trebleFilter) trebleFilter.gain.setTargetAtTime(0, audioCtx.currentTime, 0.01);
+    
+    // Affichage VFD temporaire
+    showToneDisplay("DEFAULT", 0);
+}

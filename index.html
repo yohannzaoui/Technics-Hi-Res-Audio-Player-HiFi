@@ -32,7 +32,7 @@
     </div>
 
     <div class="deck-container">
-        <img src="img/HR_logo.png" class="hr-logo-bottom" alt="High Resolution Audio Player">
+        <img src="img/HR_logo.png" class="hr-logo-bottom" alt="High Resoltion">
 
    
 
@@ -40,7 +40,7 @@
 		<a href="#" id="vfd-color-trigger" class="invisible-link" title="Change Display Color">
                 <img src="img/Technics_logo.png" class="main-logo" alt="Technics">
             	</a>		
-                <div class="model-name">High Resolution Audio Player</div> 
+                <div class="model-name">Master Edition</div> 
         </header>
 
 
@@ -51,7 +51,7 @@
             </div>
             <div style="position:absolute; width:100%; height:100%; display:flex; justify-content:center; align-items:center;">
                 <input type="file" id="file-input" multiple style="display:none">
-                <label for="file-input" style="color:#a0a0a0; cursor:pointer; font-weight:bold; letter-spacing:3px;">● SELECT FILES ●</label>
+                <label for="file-input" style="color:#a0a0a0; cursor:pointer; font-weight:bold; letter-spacing:3px;">- SELECT TRACKS -</label>
             </div>
         </div>
 
@@ -134,7 +134,9 @@
                             onclick="event.stopPropagation(); adjustBass(1)">Bass +</button>
                     </div>
                 </div>
-
+			<div class="tone-group">
+			<button class="btn btn-tone" id="default-tone-btn" onclick="event.stopPropagation(); resetToneDefault()" style="margin: 0 5px;">DEFAULT</button>
+		</div>
                 <div class="tone-group">
                     <span class="label-tiny">TREBLE</span>
                     <div class="btn-group">
